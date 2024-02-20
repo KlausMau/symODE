@@ -13,6 +13,8 @@ from scipy import integrate #, interpolate, optimize
 import SystemsCatalogue
 import CircularRealFunction as cf
 
+rng = np.random.default_rng(12345)
+
 # Conventions:
 # "get_X" returns an output and DO NOT change the object 
 # "set_X" can return an output, DO change the object
@@ -44,7 +46,7 @@ class DynamicalSystem:
                 Builder = getattr(SystemsCatalogue, autonomous)
             except AttributeError:
                 print('Unknown name. Using "van_der_Pol" instead.')
-                Builder = getattr(DynamicalSystem_SympyBuilder, 'van_der_Pol')
+                Builder = getattr(SystemsCatalogue, 'van_der_Pol')
 
             autonomous = Builder(**params)
              
@@ -312,34 +314,34 @@ class DynamicalSystem:
 
         return states
 
-    def get_trajectories_numbalsoda(self):
+    # def get_trajectories_numbalsoda(self):
         
-        f_auto = nb.jit(sy.utilities.lambdify(tuple(self.VARIABLES + self.PARAMETERS), tuple(self.ODE)), nopython=True)
+    #     f_auto = nb.jit(sy.utilities.lambdify(tuple(self.VARIABLES + self.PARAMETERS), tuple(self.ODE)), nopython=True)
 
-        @nb.cfunc(lsoda_sig)
-        def rhs(t, u, du, p):
-            arguments = list(u) + list(p)
-            du = f_auto(*arguments)
-            #du[0] = u[0]-u[0]*u[1]
-            #du[1] = u[0]*u[1]-u[1]*p[0]
+    #     @nb.cfunc(lsoda_sig)
+    #     def rhs(t, u, du, p):
+    #         arguments = list(u) + list(p)
+    #         du = f_auto(*arguments)
+    #         #du[0] = u[0]-u[0]*u[1]
+    #         #du[1] = u[0]*u[1]-u[1]*p[0]
 
-        #rhs = nb.cfunc()
+    #     #rhs = nb.cfunc()
 
-        funcptr = rhs.address # address to ODE function
-        u0 = np.array([5.,0.8]) # Initial conditions
-        data = np.array([1.0]) # data you want to pass to rhs (data == p in the rhs).
-        t_eval = np.linspace(0.0, 50.0, 1000) # times to evaluate solution
+    #     funcptr = rhs.address # address to ODE function
+    #     u0 = np.array([5.,0.8]) # Initial conditions
+    #     data = np.array([1.0]) # data you want to pass to rhs (data == p in the rhs).
+    #     t_eval = np.linspace(0.0, 50.0, 1000) # times to evaluate solution
 
-        # integrate with lsoda method
-        usol, success = lsoda(funcptr, u0, t_eval, data = data)
-        print(success)
-        # integrate with dop853 method
-        #usol1, success1 = dop853(funcptr, u0, t_eval, data = data)
+    #     # integrate with lsoda method
+    #     usol, success = lsoda(funcptr, u0, t_eval, data = data)
+    #     print(success)
+    #     # integrate with dop853 method
+    #     #usol1, success1 = dop853(funcptr, u0, t_eval, data = data)
 
-        # usol = solution
-        # success = True/False
+    #     # usol = solution
+    #     # success = True/False
 
-        return usol
+    #     return usol
 
     def get_event_based_evolution(self, state0, parameter_values, event, event_settings, 
                                   t_start=0, N_events=10, T_max=100, **kwargs):
