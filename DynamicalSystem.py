@@ -108,8 +108,8 @@ class DynamicalSystem:
         # insert values into ODE
         self.ODE = self.ODE.subs(param_values)
 
-        # delete from parameter list
-        self.PARAMETERS = list(set(self.PARAMETERS)-set(param_values.keys()))
+        # recheck for the parameters
+        self.PARAMETERS = list(set(self.ODE.free_symbols)-set(self.VARIABLES))
 
         # recompile integrator 
         self.compile_integrator()
