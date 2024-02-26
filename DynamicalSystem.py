@@ -527,6 +527,67 @@ class DynamicalSystem:
 
         return Time, y, extras
 
+    def get_isochrones_isostables(self, params, event, samples=200, r = 1e-7, t_max = [20,20], **kwargs_int):
+        '''infer phase-isostable structure for 2D system by backward integration'''
+
+        # obtain limit cycle
+        Time, y, extras = self.get_limit_cycle(params, event, isostable_expansion_order=1,
+                                         t_eq=250, state0=[1.,1.], 
+                                         samples=samples, 
+                                         **kwargs_int)
+
+        # time-inverted system
+        system_inv = self.new_time_inverted()
+
+        # initial curve
+        samples = len(Time)-1
+        #phase = np.arange(samples)/samples*2*np.pi
+        #r = 1e-7
+        #sign = [-1,1]
+
+        #t_max = [21./np.abs(kappa), 21./np.abs(kappa)]
+
+        T = Time[-1]
+        time_samples = [np.arange(0, t_max, T/samples) for t_max in t_max]
+
+        states = dict()
+
+        for z, sign in enumerate([-1,1]):
+            
+            states.update({sign: np.zeros((samples, len(time_samples[z]), 2))})
+
+            x0 = y[0,0] + sign*r*y[1,0] #y_CRF[0][0].get_values_at(phase) + r*sign[z]*y_CRF[1][0].get_values_at(phase)
+            y0 = y[0,1] + sign*r*y[1,1] #y_CRF[0][1].get_values_at(phase) + r*sign[z]*y_CRF[1][1].get_values_at(phase)
+
+            for s in range(samples):
+                
+                # initial x,y
+                state0 = np.array([x0[s], y0[s]])
+
+                sol = system_inv.get_trajectories(t_span=(0., time_samples[z][-1]), 
+                                            t_eval = time_samples[z], 
+                                            state0 = state0, 
+                                            parameter_values=params)
+
+                # bring solution into correct shape to account for exploding integration
+                
+                temp = np.empty((len(time_samples[z]),2))
+                temp.fill(np.inf)
+
+                if len(sol.y) > 0:
+                    y_T = sol.y.T
+                    temp[:len(y_T[:,0]), :len(y_T[0,:])] = y_T
+                
+                states[sign][s,:,:] = temp
+
+            # rolling the states times further in time to form isochrones
+            
+            for t,T in enumerate(time_samples[z][:]):
+                for i in [0,1]:
+                    states[sign][:,t,i] = np.roll(states[sign][:,t,i],-t)
+
+        return states
+
     def get_isostable_around_focus(self):
         ''' returns a function to compute an ellipse around a focus fixed point '''
 
