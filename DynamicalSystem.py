@@ -527,13 +527,14 @@ class DynamicalSystem:
 
         return Time, y, extras
 
-    def get_isochrones_isostables(self, params, event, samples=200, r = 1e-7, t_max = [20,20], **kwargs_int):
+    def get_isochrones_isostables(self, params, event, r = 1e-7, t_max = [20,20], kwargs_limit_cycle={}, **kwargs_int):
         '''infer phase-isostable structure for 2D system by backward integration'''
 
         # obtain limit cycle
         Time, y, extras = self.get_limit_cycle(params, event, isostable_expansion_order=1,
-                                         t_eq=250, state0=[1.,1.], 
-                                         samples=samples, 
+                                         **kwargs_limit_cycle,
+                                         #t_eq=250, state0=[1.,1.], 
+                                         #samples=samples, 
                                          **kwargs_int)
 
         # time-inverted system
@@ -541,11 +542,6 @@ class DynamicalSystem:
 
         # initial curve
         samples = len(Time)-1
-        #phase = np.arange(samples)/samples*2*np.pi
-        #r = 1e-7
-        #sign = [-1,1]
-
-        #t_max = [21./np.abs(kappa), 21./np.abs(kappa)]
 
         T = Time[-1]
         time_samples = [np.arange(0, t_max, T/samples) for t_max in t_max]
@@ -556,18 +552,17 @@ class DynamicalSystem:
             
             states.update({sign: np.zeros((samples, len(time_samples[z]), 2))})
 
-            x0 = y[0,0] + sign*r*y[1,0] #y_CRF[0][0].get_values_at(phase) + r*sign[z]*y_CRF[1][0].get_values_at(phase)
-            y0 = y[0,1] + sign*r*y[1,1] #y_CRF[0][1].get_values_at(phase) + r*sign[z]*y_CRF[1][1].get_values_at(phase)
+            x0 = y[0,0] + sign*r*y[1,0]
+            y0 = y[0,1] + sign*r*y[1,1]
 
             for s in range(samples):
                 
-                # initial x,y
-                state0 = np.array([x0[s], y0[s]])
-
+                # integrate backwards in time
                 sol = system_inv.get_trajectories(t_span=(0., time_samples[z][-1]), 
                                             t_eval = time_samples[z], 
-                                            state0 = state0, 
-                                            parameter_values=params)
+                                            state0 = np.array([x0[s], y0[s]]),
+                                            parameter_values=params, 
+                                            **kwargs_int)
 
                 # bring solution into correct shape to account for exploding integration
                 
