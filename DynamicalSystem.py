@@ -1,3 +1,4 @@
+#from os import system
 import numpy as np
 import scipy as sc
 import sympy as sy
@@ -155,6 +156,20 @@ class DynamicalSystem:
         return
 
     # return a new DynamicalSystem object
+
+    def new_parameter_set(self, params):
+        ''' returns a new DynamicalSystem with fixed parameter values
+        
+        TODO : this function would benefit from "ODE" being a dictionary
+        '''
+        
+        ODE_new = {}
+        for i in range(len(self.VARIABLES)):
+            ODE_new.update({self.VARIABLES[i]: -self.ODE[i]})
+        
+        system_new = DynamicalSystem(autonomous = ODE_new)
+        system_new.set_parameter_value(params)
+        return system_new
 
     def new_time_inverted(self):
         ODE_new = {}
@@ -583,21 +598,38 @@ class DynamicalSystem:
 
         return states
 
-    def get_isostable_around_focus(self):
-        ''' returns a function to compute an ellipse around a focus fixed point '''
+    def get_isostable_around_focus(self, params):
+        ''' returns a function to compute an ellipse around a focus fixed point 
+        
+        Parameters
+        ----------
+
+        params : dict
+            The parameter values for the system
+        
+        Returns
+        -------
+        fp : list
+            The fixed point coordinates
+
+        ellipse_radius: func
+            A function that calculates the ellipses radius
+
+        '''
 
         if self.DIMENSION != 2:
             print('This works only for 2-dimensional systems!')
             return 
-        
-        # compute fixed point
+
+        # compute fixed points
         fp = self.get_fixed_points()
         
         #x0 = [self.VARIABLES[i].subs(fp) for i in range(self.Dim)
 
-        # compute Jacobian at fixed point
+        # compute Jacobian at fixed point "fp[0]"
         self.calculate_Jacobian()
-        DF = self.JACOBIAN.subs(fp[0])
+        DF = self.JACOBIAN.doit().subs(fp[0]).subs(params)
+        print(DF)
         DF_np = np.array(DF).astype(np.float64)
 
         # compute eigenvalues and left eigenvector numerically
@@ -614,6 +646,85 @@ class DynamicalSystem:
             return 1./np.sqrt(np.abs(p)**2*np.cos(x)**2 + np.abs(q)**2*np.sin(x)**2 + 2*np.real(p*np.conj(q))*np.cos(x)*np.sin(x))
 
         return fp[0], ellipse_radius
+
+    def get_isostable_map_at_fixed_points(self, params) -> list:
+        ''' returns a function to compute the coordinates for given isostables 
+        
+        Parameters
+        ----------
+
+        params : dict
+            The parameter values for the system
+        
+        Returns
+        -------
+        output : list
+            A list of functions that map from isostable to original coordinates
+
+            
+        TODO    review whether the new DynamicalSystem is really necessary
+        '''
+
+        if self.DIMENSION != 2:
+            print('This function is still only implemented for 2-dimensional systems.')
+            return
+        
+        # new DynamicalSystem with fixed parameters
+        system = self.new_parameter_set(params)
+
+        # compute Jacobian
+        system.calculate_Jacobian()
+
+        # compute fixed points
+        fixed_points = system.get_fixed_points()
+        
+        output = list()
+
+        for fp in fixed_points:
+            # Jacobian at fixed point 
+            DF = system.JACOBIAN.doit().subs(fp)
+            
+            DF_np = np.array(DF).astype(np.float64)
+            fp_np = np.array(list(fp.values()))
+
+            # compute eigenvalues and left eigenvector numerically
+            eigenvalues, eigenvectors = np.linalg.eig(DF_np)
+
+            p = eigenvectors[:,0]
+            q = eigenvectors[:,1]
+
+            if np.imag(eigenvalues[0]) == 0:
+                def isostable_map(a1, a2):
+                    ''' complex-conjugate eigenvalues 
+                    
+                    Parameters
+                    ----------
+                    a1 : float
+                        isostable coordinate a1
+
+                    a2 : float
+                        isostable coordinate a2
+                    '''
+
+                    return fp_np + p*a1 + q*a2
+            else:
+                def isostable_map(r, psi):
+                    ''' complex-conjugate eigenvalues 
+                    
+                    Parameters
+                    ----------
+                    r : float
+                        absolute value (non-negative)
+
+                    psi : float
+                        complex argument (e.g. from 0 to 2*pi)
+                    '''
+
+                    return fp_np + 2*r*np.real(p*np.exp(1j*psi)) #np.matmul(eigenvectors, a)
+
+            output.append(isostable_map)
+
+        return output
 
     def get_time_averaged_Jacobian(self, params, **kwargs):
         #'''this function calculates the angular frequency and the Floquet exponent of a 2D limit cycle system'''
