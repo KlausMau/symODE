@@ -96,8 +96,11 @@ class DynamicalSystem:
         
         if Jacobian = True: the returned dictionary is equipped with another key Jacobian
         '''
-        fixed_points = sy.solve(self.ODE, self.VARIABLES, dict=True)
-        
+        try:
+            fixed_points = sy.solve(self.ODE, self.VARIABLES, dict=True)
+        except NotImplementedError:
+            fixed_points = sy.nsolve(self.ODE, self.VARIABLES, np.zeros(self.DIMENSION), dict=True)
+
         if Jacobian == True:
             self.calculate_Jacobian()
             for i, fp in enumerate(fixed_points):
@@ -309,7 +312,7 @@ class DynamicalSystem:
     def compile_integrator(self, **kwargs) -> None:
         self.f_ODEINT = self.get_precompiled_integrator(**kwargs)
 
-    def get_trajectories(self, t_span, state0 = None, parameter_values=None, max_step=0.01, **kwargs):
+    def get_trajectories(self, t_span, state0 = None, parameter_values={}, max_step=0.01, **kwargs):
         '''
         Return the trajectories of the dynamical system using "scipy.integrate.solve_ivp".
 
@@ -663,11 +666,12 @@ class DynamicalSystem:
 
             
         TODO    review whether the new DynamicalSystem is really necessary
+        TODO    check for degenerate case of eigenvalues with multipl. > 1
         '''
 
         if self.DIMENSION != 2:
             print('This function is still only implemented for 2-dimensional systems.')
-            return
+            return list()
         
         # new DynamicalSystem with fixed parameters
         system = self.new_parameter_set(params)
@@ -685,16 +689,28 @@ class DynamicalSystem:
             DF = system.JACOBIAN.doit().subs(fp)
             
             DF_np = np.array(DF).astype(np.float64)
-            fp_np = np.array(list(fp.values()))
+            fp_np = np.array(list(fp.values())).astype(np.float64)
 
-            # compute eigenvalues and left eigenvector numerically
-            eigenvalues, eigenvectors = np.linalg.eig(DF_np)
+            # compute eigenvalues and right eigenvectors numerically
+            eigenvalues, eigenvectors_right = np.linalg.eig(DF_np)
 
-            p = eigenvectors[:,0]
-            q = eigenvectors[:,1]
+            c1 = eigenvectors_right[:,0]
+            c2 = eigenvectors_right[:,1]
+            
+            # compute eigenvalues and left eigenvectors numerically
+            # here, we use the orthogonality of left/right eigenvectors and 2D
+            d1_raw = np.array([c2[1], -c2[0]])
+            d2_raw = np.array([c1[1], -c1[0]])
+
+            d1 = d1_raw/np.dot(c1,d1_raw)
+            d2 = d2_raw/np.dot(c2,d2_raw)
+
+            # construct map 
+            def isostable_from_x(x, y):
+                return np.matmul(np.array([d1, d2]),(np.array([x,y]) - fp_np))
 
             if np.imag(eigenvalues[0]) == 0:
-                def isostable_map(a1, a2):
+                def x_from_isostable(a1, a2):
                     ''' complex-conjugate eigenvalues 
                     
                     Parameters
@@ -706,9 +722,10 @@ class DynamicalSystem:
                         isostable coordinate a2
                     '''
 
-                    return fp_np + p*a1 + q*a2
+                    return fp_np + c1*a1 + c2*a2
+                
             else:
-                def isostable_map(r, psi):
+                def x_from_isostable(r, psi):
                     ''' complex-conjugate eigenvalues 
                     
                     Parameters
@@ -720,9 +737,9 @@ class DynamicalSystem:
                         complex argument (e.g. from 0 to 2*pi)
                     '''
 
-                    return fp_np + 2*r*np.real(p*np.exp(1j*psi)) #np.matmul(eigenvectors, a)
+                    return fp_np + 2*r*np.real(c1*np.exp(1j*psi)) #np.matmul(eigenvectors, a)
 
-            output.append(isostable_map)
+            output.append([eigenvalues, x_from_isostable, isostable_from_x])
 
         return output
 
