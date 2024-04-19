@@ -93,8 +93,8 @@ def van_der_Pol_Lienard():
     return {x: -y + eps*(x-x**3/3), y: x}
 
 def FitzHugh_Nagumo():
-    x = sy.symbols('x')
-    y = sy.symbols('y')
+    x = sy.symbols('x', real=True)
+    y = sy.symbols('y', real=True)
     
     I = sy.symbols('I')
     tau = sy.symbols('tau')
