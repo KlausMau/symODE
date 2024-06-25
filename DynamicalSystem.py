@@ -1,9 +1,9 @@
-#from os import system
 import numpy as np
 import scipy as sc
 import sympy as sy
 import numba as nb
 #from numbalsoda import lsoda_sig, lsoda, dop853
+#from os import system
 
 #import sys
 import copy
@@ -428,7 +428,10 @@ class DynamicalSystem:
 
         return states[:,:events_idx[-1]], Time[:events_idx[-1]], events_idx[:-1]
 
-    def get_limit_cycle(self, params, event, state0=None, t_eq=100, samples=1000, isostable_expansion_order=0, **kwargs):
+    def get_limit_cycle(self, params, event, 
+                        state0=None, t_eq=100, samples=1000, isostable_expansion_order=0, 
+                        ShowResults = True,
+                        **kwargs):
         '''
         returns:
         Time:       instances of time, Time[-1] is the period
@@ -436,8 +439,10 @@ class DynamicalSystem:
                     y[0] is the limit cycle
                     y[1], y[2]
         extra[0]:   Jacobian
-        extra[1]:   fundamental matrix   
-        extra[2]:   d2_special
+        extra[1]:   fundamental matrix
+        extra[2]:   kappa_trace
+        extra[3]:   kappa_monod
+        extra[4]:   d2_special
         '''
         event.terminal = False
 
@@ -452,10 +457,14 @@ class DynamicalSystem:
         #for i in range(1, len(sol_eq.t_events[0])):
         #    print(sol_eq.t_events[0][i]-sol_eq.t_events[0][i-1])
 
+        # period
         T = sol_eq.t_events[0][-1]-sol_eq.t_events[0][-2]
 
-        Time = np.linspace(0, T, samples)
+        # frequency
+        omega = 2*np.pi/T
 
+        Time = np.linspace(0, T, samples)
+        
         sol_LC  = self.get_trajectories(t_span=(0., T), 
                                         t_eval = Time, 
                                         state0 = sol_eq.y_events[0][-1],
@@ -481,7 +490,7 @@ class DynamicalSystem:
             for t in range(samples):
                 J[:,:,t] = J_np(*y[0,:,t])
 
-            ### EXTRA 1 ### --> "extra" to dictionary
+            ### EXTRA 0 ### --> "extra" to dictionary
             extras.append(J)
 
             ### calculate fundamental solution matrix ###
@@ -505,19 +514,23 @@ class DynamicalSystem:
 
                 fund_matrix[:,n,:] = sol.y[self.DIMENSION:,:]
             
-            ### EXTRA 2 ###
+            ### EXTRA 1 ###
             extras.append(fund_matrix)
 
             # eigenvalues/-vectors of monodromy matrix (this is for N=2 only!!)
             # this selection process has to be revisited!
-            w, v = np.linalg.eig(fund_matrix[:,:,-1])
-            non_unity_eigenvec = v.transpose()[np.abs(w-1) > 1e-4][0]
+            eigenvals, eigenvecs = np.linalg.eig(fund_matrix[:,:,-1])
+            non_unity_eigenvec = eigenvecs.transpose()[np.abs(eigenvals-1) > 1e-4][0]
 
             # this is numerical unstable for large |kappa|, consider changing to trace formula
-            #kappa = np.log(np.min(w))/Time[-1]
-            kappa = integrate.trapezoid(np.trace(J, axis1=0, axis2=1), Time)/Time[-1]
-
-            y[1] = np.array([np.exp(-kappa*Time[t])*np.matmul(fund_matrix[:,:,t], non_unity_eigenvec) for t in range(len(Time))]).transpose()
+            kappa_trace = integrate.trapezoid(np.trace(J, axis1=0, axis2=1), Time)/T
+            kappa_monod = np.log(np.min(eigenvals))/T
+            
+            ### EXTRA 2 & 3 ###
+            extras.append(kappa_trace)
+            extras.append(kappa_monod)
+            
+            y[1] = np.array([np.exp(-kappa_trace*Time[t])*np.matmul(fund_matrix[:,:,t], non_unity_eigenvec) for t in range(len(Time))]).transpose()
             #y[1] = np.array([np.power(np.min(w),-Time[t]/Time[-1])*np.matmul(fund_matrix[:,:,t], non_unity_eigenvec) for t in range(len(Time))]).transpose()
 
             if isostable_expansion_order>=2:
@@ -537,11 +550,17 @@ class DynamicalSystem:
                 
                 d2_special = sol.y[2*self.DIMENSION:,:]
 
-                y2_data_ini = np.matmul(np.linalg.inv(np.exp(2.*kappa*Time[-1])*np.eye(2)-fund_matrix[:,:,-1]), d2_special[:,-1])
-                y[2] = np.array([np.exp(-2.*kappa*Time[t])*(np.matmul(fund_matrix[:,:,t], y2_data_ini[:]) + d2_special[:,t]) for t in range(len(Time))]).transpose()
+                y2_data_ini = np.matmul(np.linalg.inv(np.exp(2.*kappa_trace*Time[-1])*np.eye(2)-fund_matrix[:,:,-1]), d2_special[:,-1])
+                y[2] = np.array([np.exp(-2.*kappa_trace*Time[t])*(np.matmul(fund_matrix[:,:,t], y2_data_ini[:]) + d2_special[:,t]) for t in range(len(Time))]).transpose()
 
-                ### EXTRA 3 ###
+                ### EXTRA 4 ###
                 extras.append(d2_special)
+
+        if ShowResults == True:            
+            print(f'period = {T}')
+            print(f'frequency = {omega}')
+            print(f'Floquet exponent (calculated by Jacobian trace)   = {kappa_trace}')
+            print(f'Floquet exponent (calculated by Monodromy matrix) = {kappa_monod}')
 
         return Time, y, extras
 
