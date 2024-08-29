@@ -5,7 +5,7 @@ authors:
   given-names: "Erik Thomas Klaus"
   orcid: "https://orcid.org/0000-0002-7152-9732"
 title: "symODE"
-version: 0.0.1
-doi:
+version: 
+doi: 10.5281/zenodo.13523852
 date-released: 2024-08-29
 url: "https://github.com/KlausMau/symODE"
