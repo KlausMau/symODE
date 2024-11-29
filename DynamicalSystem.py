@@ -1,30 +1,22 @@
+import copy
 import numpy as np
 import scipy as sc
 import sympy as sy
 import numba as nb
-#from numbalsoda import lsoda_sig, lsoda, dop853
-#from os import system
-
-#import sys
-import copy
 from IPython.core.display import display, Math
 
 from scipy import integrate #, interpolate, optimize
 #from matplotlib import cm
 import SystemsCatalogue
-import CircularRealFunction as cf
+#import CircularRealFunction as cf
 
 rng = np.random.default_rng(12345)
-
-# Conventions:
-# "get_X" returns an output and DO NOT change the object 
-# "set_X" can return an output, DO change the object
 
 class DynamicalSystem:
     '''
     This is a class to deal in numerical and analytical aspect with dynamical systems of the form
 
-    dx/dt = F(x)      with state variable x € R^N
+    dx/dt = F(x,t)      with state variable x € R^N
 
     N-dimensional function F is given as dictionary:
     ----------------------------------------------
@@ -33,15 +25,22 @@ class DynamicalSystem:
     Future features:
     - adapt functions to non-autonmous F(x,t)
     - store ODE also as dictionary
+
+    Naming conventions:
+    "get_X" returns an output and DO NOT change the object 
+    "set_X" can return an output, DO change the object
+
+    The used coding convention is PEP8.
     '''
 
     def __init__(self, autonomous, autocompile_integrator=True, **params) -> None:
+        '''
+        set autonomous dynamics by "string" or "dictionary"
+        '''
         
-        ### set autonomous dynamics by "string" or "dictionary"
-
         if type(autonomous) == str:
-            # initialize by a special name    
-            # search for function matching the name    
+            # initialize by a special name
+            # search for function matching the name
             try:
                 #Builder = getattr(DynamicalSystem_SympyBuilder, autonomous)
                 Builder = getattr(SystemsCatalogue, autonomous)
