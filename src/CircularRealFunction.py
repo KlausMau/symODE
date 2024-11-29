@@ -9,24 +9,23 @@ def min_sqsum(a,b):
 
 class CircularRealFunction:
 
-    # initialization
     def __init__(self, fourier_modes = np.array([0.])) -> None:
         '''initialize a CircularRealFunction (default: zero function)'''
         self._fourier_modes = np.array(fourier_modes, dtype=complex)
 
-    # shift the Fourier modes by "phi0"
     def shift_by(self, phi0: float) -> None:
+        '''shift the Fourier modes by "phi0" '''
         for n in range(len(self._fourier_modes)):
             # f_k |-> f_k * e^(i*k*phi0))
             self._fourier_modes[n] *= np.exp(1j*n*phi0)
 
-    # centre the distribution at "phi0"
     def centre_at(self, phi0: float) -> None:
+        '''centre the distribution at "phi0" '''
         theta = np.angle(self._fourier_modes[1])
         self.shift_by(phi0-theta)
 
-    # set Fourier modes from data by fitting (method of least squares)
     def set_from_data(self, x, y, maximum_mode_number = 10):
+        '''set Fourier modes from data by fitting (method of least squares)'''
         modes = np.zeros(maximum_mode_number + 1, dtype = complex)
         np_x = np.array(x)
         np_y = np.array(y)
@@ -50,8 +49,8 @@ class CircularRealFunction:
 
         self._fourier_modes = modes
 
-    # set Fourier modes by generating data from function
     def set_from_function(self, f, maximum_mode_number = 10, samples = 100, **properties) -> None:
+        '''set Fourier modes by generating data from function'''
         x = np.linspace(0, 2*np.pi, samples)
         y = f(x, **properties)
         self.set_from_data(x, y, maximum_mode_number = maximum_mode_number)
@@ -93,15 +92,15 @@ class CircularRealFunction:
         np_x = np.array(x)
         return np.real(f_modes[0]*np.ones(np_x.size) + 2*np.sum([f_modes[k]*np.exp(-1j*k*np_x) for k in range(1, f_modes.size)], axis=0))
 
-    # return a "CircularFunction" being the derivative of "self"
     def get_derivative(self):
+        '''return a "CircularFunction" being the derivative of "self" '''
         f_modes = self._fourier_modes
         df = CircularRealFunction()
         df._fourier_modes = np.array([(-1j*n)*f_modes[n] for n in range(len(f_modes))], dtype=complex)
         return df
 
-    # return a "CircularRealFunction" being the multiplication "self" with another "CircularRealFunction"
     def get_multiplication(self, g):
+        '''return a "CircularRealFunction" being the multiplication "self" with another "CircularRealFunction"'''
         f_modes = self._fourier_modes
         g_modes = g.FOURIER_MODES
 
@@ -130,8 +129,8 @@ class CircularRealFunction:
         h._fourier_modes = h_modes
         return h
 
-    # return argument and value for minimum
     def get_min(self, samples = 100):
+        '''return argument and value for minimum'''
         x = np.linspace(0, 2.*np.pi, samples)
         y = self.get_values_at(x)
 
@@ -143,8 +142,8 @@ class CircularRealFunction:
 
         return argument, value
 
-    # return argument and value for maximum
     def get_max(self, samples = 100):
+        '''return argument and value for maximum'''
         x = np.linspace(0, 2.*np.pi, samples)
         y = self.get_values_at(x)
 
@@ -156,7 +155,7 @@ class CircularRealFunction:
 
         return argument, value
 
-    # return value and sign of derivative for given argument
     def get_threshold(self, x):
+        '''return value and sign of derivative for given argument'''
         df = self.get_derivative()
         return np.array([self.get_values_at(x), np.sign(df.get_values_at(x))])
