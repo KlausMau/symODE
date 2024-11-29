@@ -1,6 +1,4 @@
 import numpy as np
-import scipy as sc
-
 from scipy import optimize
 
 def min_sqsum(a,b):
@@ -12,35 +10,9 @@ def min_sqsum(a,b):
 class CircularRealFunction:
 
     # initialization
-    def __init__(self, **kwargs):
-        self.set_shape(**kwargs)
-
-    # overwrite the Fourier modes by predefined ones (centred at 0); default: "f=0"
-    def set_shape(self, fourier_modes = None, maximum_mode_number = 10, name = None, **properties) -> None:
-        if fourier_modes is not None:
-            self._fourier_modes = np.array(fourier_modes, dtype=complex)
-        else:
-            # if not, choose a predefined type with given "MAX_MODE_NUMBER"
-
-            # first check for valid "MAX_MODE_NUMBER"
-            if maximum_mode_number < 0:
-                raise ValueError('maximum Fourier mode number has to be a positive integer.')
-
-            # evaluate "TYPE"
-            if name == None:
-                self._fourier_modes = np.array([0, 0], dtype=complex)
-            #elif TYPE == 'type-I':
-            #    self.set_from_function(PRC_type_I, MAX_MODE_NUMBER = MAX_MODE_NUMBER, **properties)
-            #elif TYPE == 'type-II':
-            #    self.set_from_function(PRC_type_II, MAX_MODE_NUMBER = MAX_MODE_NUMBER, **properties)
-            #elif TYPE == 'Stuart-Landau_PRC':
-            #    self.FOURIER_MODES = PRC_Stuart_Landau(**properties)
-            #elif TYPE == 'Stuart-Landau_IRC':
-            #    self.FOURIER_MODES = IRC_Stuart_Landau(**properties)
-            #elif TYPE == 'van-der-Pol':
-            #    self.FOURIER_MODES = PRC_van_der_Pol()
-            else:
-                raise ValueError('unrecognized value for "TYPE"')
+    def __init__(self, fourier_modes = np.array([0.])) -> None:
+        '''initialize a CircularRealFunction (default: zero function)'''
+        self._fourier_modes = np.array(fourier_modes, dtype=complex)
 
     # shift the Fourier modes by "phi0"
     def shift_by(self, phi0: float) -> None:
