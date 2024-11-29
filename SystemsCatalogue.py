@@ -90,7 +90,7 @@ def van_der_Pol_Lienard():
     y = sy.symbols('y')
     eps = sy.symbols('epsilon')
 
-    return {x: -y + eps*(x-x**3/3), y: x}
+    return {x: eps*(x-x**3/3)-y, y: x}
 
 def FitzHugh_Nagumo():
     x = sy.symbols('x', real=True)
@@ -231,12 +231,19 @@ def Lorenz():
     x = sy.symbols('x')
     y = sy.symbols('y')
     z = sy.symbols('z')
-    
     sigma = sy.symbols('sigma')
     rho = sy.symbols('rho')
     beta = sy.symbols('beta')
 
     return {x: sigma * (y - x), y: x * (rho - z) - y, z: x * y - beta * z }
+
+def Thomas():
+    x = sy.symbols('x')
+    y = sy.symbols('y')
+    z = sy.symbols('z')
+    b = sy.symbols('b')
+
+    return {x: sy.sin(y) - b*x , y: sy.sin(z) - b*y, z: sy.sin(x) - b*z }
 
 def Roessler():
     x = sy.symbols('x')
