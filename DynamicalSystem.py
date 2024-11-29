@@ -37,57 +37,55 @@ class DynamicalSystem:
         '''
         set autonomous dynamics by "string" or "dictionary"
         '''
-        
-        if type(autonomous) == str:
+        if isinstance(autonomous, str):
             # initialize by a special name
             # search for function matching the name
             try:
-                #Builder = getattr(DynamicalSystem_SympyBuilder, autonomous)
-                Builder = getattr(SystemsCatalogue, autonomous)
+                builder = getattr(SystemsCatalogue, autonomous)
             except AttributeError:
                 print('Unknown name. Using "van_der_Pol" instead.')
-                Builder = getattr(SystemsCatalogue, 'van_der_Pol')
+                builder = getattr(SystemsCatalogue, 'van_der_Pol')
 
-            autonomous = Builder(**params)
-             
+            autonomous = builder(**params)
         # keys -> dynamical variables (list introduces an order!)
-        self.VARIABLES = list(autonomous.keys())
+        self._variables = list(autonomous.keys())
 
         # dimensionality
-        self.DIMENSION = len(self.VARIABLES)
+        self._dimension = len(self._variables)
 
         # values -> ODEs (Sympy matrix, fixes the order of variables!)
-        self.ODE = sy.Matrix(list(autonomous.values()))
+        self._ode = sy.Matrix(list(autonomous.values()))
 
         # every other symbol appearing in the ODEs apart from variables
-        self.PARAMETERS = list(set(self.ODE.free_symbols)-set(self.VARIABLES))
+        self._parameters = list(set(self._ode.free_symbols)-set(self._variables))
 
         # compile integrator function
-        if autocompile_integrator == True:
-            self.f_ODEINT = self.get_precompiled_integrator()
+        if autocompile_integrator is True:
+            self._f_odeint = self.get_precompiled_integrator()
 
     # convenience features
 
     def show(self) -> None:
-        display(Math(r'{}'.format(self.get_ODE_LaTeX())))
+        '''prints the LaTeX code'''
+        display(Math(rf'{self.get_ode_latex()}'))
 
-    def get_ODE_LaTeX(self):
-        ODE_latex = '$'
-        for i in range(self.DIMENSION):
-            ODE_latex += '\dot {} = {} \\\\ '.format(sy.latex(self.VARIABLES[i]), sy.latex(self.ODE[i]))
-        ODE_latex += '$'
+    def get_ode_latex(self):
+        ode_latex = '$'
+        for i in range(self._dimension):
+            ode_latex += '\dot {} = {} \\\\ '.format(sy.latex(self._variables[i]), sy.latex(self._ode[i]))
+        ode_latex += '$'
 
-        return ODE_latex[:]
+        return ode_latex[:]
 
     def get_indexing_dict(self, index):
         '''
         returns a dictionary mapping the variables to an indexed version of themselves
         '''
-        return dict(zip(self.VARIABLES, [sy.symbols(str(var) + '_' + str(index)) for var in self.VARIABLES]))
+        return dict(zip(self._variables, [sy.symbols(str(var) + '_' + str(index)) for var in self._variables]))
 
     # symbolic features
 
-    def get_fixed_points(self, Jacobian=False):
+    def get_fixed_points(self, jacobian=False):
         '''
         this function returns the fixed points of the system
 
@@ -96,65 +94,64 @@ class DynamicalSystem:
         if Jacobian = True: the returned dictionary is equipped with another key Jacobian
         '''
         try:
-            fixed_points = sy.solve(self.ODE, self.VARIABLES, dict=True)
+            fixed_points = sy.solve(self._ode, self._variables, dict=True)
         except NotImplementedError:
-            fixed_points = sy.nsolve(self.ODE, self.VARIABLES, np.zeros(self.DIMENSION), dict=True)
+            fixed_points = sy.nsolve(self._ode, self._variables, np.zeros(self._dimension), dict=True)
 
-        if Jacobian == True:
-            self.calculate_Jacobian()
+        if jacobian is True:
+            self.calculate_jacobian()
             for i, fp in enumerate(fixed_points):
-                fixed_points[i].update({'Jacobian' : self.JACOBIAN.doit().subs(fp)})
+                fixed_points[i].update({'Jacobian' : self._jacobian.doit().subs(fp)})
 
         return fixed_points
 
     def set_parameter_value(self, param_values) -> None:
         # insert values into ODE
-        self.ODE = self.ODE.subs(param_values)
+        self._ode = self._ode.subs(param_values)
 
         # recheck for the parameters
-        self.PARAMETERS = list(set(self.ODE.free_symbols)-set(self.VARIABLES))
-
-        # recompile integrator 
-        self.compile_integrator()
-
-    def add_term(self, target_variables, term) -> None:
-        # this function is preliminary  
-
-        for x in target_variables:
-
-            # find index of target variables
-            indeces = [i for i, variable in enumerate(self.VARIABLES) if variable == x]
-            idx = indeces[0]
-
-            # add to ODE
-            self.ODE[idx] += term
-        
-        # add new parameters        
-        new_parameters = list(set(term.free_symbols)-set(self.VARIABLES)-set(self.PARAMETERS))
-        self.PARAMETERS += new_parameters
+        self._parameters = list(set(self._ode.free_symbols)-set(self._variables))
 
         # recompile integrator
         self.compile_integrator()
 
-    def calculate_Jacobian(self) -> None:
+    def add_term(self, target_variables, term) -> None:
+        # this function is preliminary
+
+        for x in target_variables:
+
+            # find index of target variables
+            indeces = [i for i, variable in enumerate(self._variables) if variable == x]
+            idx = indeces[0]
+
+            # add to ODE
+            self._ode[idx] += term    
+        # add new parameters
+        new_parameters = list(set(term.free_symbols)-set(self._variables)-set(self._parameters))
+        self._parameters += new_parameters
+
+        # recompile integrator
+        self.compile_integrator()
+
+    def calculate_jacobian(self) -> None:
         '''compute Jacobian of system'''
-        N = self.DIMENSION
-        self.JACOBIAN = sy.ones(N)
+        N = self._dimension
+        self._jacobian = sy.ones(N)
         for i in range(N):
             for j in range(N):
-                self.JACOBIAN[i,j] = sy.Derivative(self.ODE[i], self.VARIABLES[j])
+                self._jacobian[i,j] = sy.Derivative(self._ode[i], self._variables[j])
         return
 
-    def calculate_Hessian(self) -> None:
+    def calculate_hessian(self) -> None:
         '''compute Hessian tensor of system'''
-        N = self.DIMENSION
-        self.HESSIAN = []
-        for v in range(len(self.VARIABLES)):
+        N = self._dimension
+        self._hessian = []
+        for v in range(len(self._variables)):
             temp = sy.ones(N)
             for i in range(N):
                 for j in range(N):
-                    temp[i,j] = sy.Derivative(sy.Derivative(self.ODE[v], self.VARIABLES[j]), self.VARIABLES[i])
-            self.HESSIAN.append(temp)
+                    temp[i,j] = sy.Derivative(sy.Derivative(self._ode[v], self._variables[j]), self._variables[i])
+            self._hessian.append(temp)
         return
 
     # return a new DynamicalSystem object
@@ -164,10 +161,10 @@ class DynamicalSystem:
         
         TODO : this function would benefit from "ODE" being a dictionary
         '''
-        
+      
         ODE_new = {}
-        for i in range(len(self.VARIABLES)):
-            ODE_new.update({self.VARIABLES[i]: -self.ODE[i]})
+        for i in range(len(self._variables)):
+            ODE_new.update({self._variables[i]: -self._ode[i]})
         
         system_new = DynamicalSystem(autonomous = ODE_new)
         system_new.set_parameter_value(params)
@@ -175,8 +172,8 @@ class DynamicalSystem:
 
     def new_time_inverted(self):
         ODE_new = {}
-        for i in range(len(self.VARIABLES)):
-            ODE_new.update({self.VARIABLES[i]: -self.ODE[i]})
+        for i in range(len(self._variables)):
+            ODE_new.update({self._variables[i]: -self._ode[i]})
         return DynamicalSystem(autonomous = ODE_new)
 
     def new_transformed(self, new_variables, equations, **kwargs):
@@ -186,92 +183,92 @@ class DynamicalSystem:
         equations = {x_old: f(x_new, y_new), y_old: g(x_new, y_new)}
         '''
         # calculate the Jacobian
-        Jacobian_list = []
-        for x_old in self.VARIABLES:
-            row = [sy.Derivative(equations[x_old], x_new) for x_new in new_variables]            
-            Jacobian_list.append(row)
-        Jacobian = sy.Matrix(Jacobian_list)
+        jacobian_list = []
+        for x_old in self._variables:
+            row = [sy.Derivative(equations[x_old], x_new) for x_new in new_variables]
+            jacobian_list.append(row)
+        jacobian = sy.Matrix(jacobian_list)
 
         # invert Jacobian
         #try:, except
-        Jacobian_inv = Jacobian.inv().doit()
-        ODE_new = Jacobian_inv*self.ODE.subs(equations)
+        jacobian_inv = jacobian.inv().doit()
+        ode_new = jacobian_inv*self._ode.subs(equations)
 
-        # put into dictionary    
-        ODE_dict = {}        
+        # put into dictionary
+        ode_dict = {}
         for i, x_new in enumerate(new_variables):
-            ODE_dict[x_new] = ODE_new[i].cancel()
+            ode_dict[x_new] = ode_new[i].cancel()
 
-        return DynamicalSystem(ODE_dict, **kwargs) 
-    
+        return DynamicalSystem(ode_dict, **kwargs)
+
     def new_perturbed(self, order=1):
         ''' construct perturbed dynamical system up to order N 
         (0) dot x = F(x)
         (1) dot d_1 = J_F(x)*d_1
         (2) dot d_2 = J_F(x)*d_2 + H(x, d_1)
         '''
-        N = self.DIMENSION
+        n = self._dimension
 
         # terms of order "0"
-        ODE_pert = {}
-        for i in range(N):
-            ODE_pert.update({self.VARIABLES[i]: self.ODE[i]})
+        ode_pert = {}
+        for i in range(n):
+            ode_pert.update({self._variables[i]: self._ode[i]})
         
         # terms of order "1"
-        self.calculate_Jacobian()
-        d1 = sy.Matrix([sy.symbols(f'd_1{x}') for x in self.VARIABLES])
-        J_d1 = self.JACOBIAN.doit()*d1
+        self.calculate_jacobian()
+        d1 = sy.Matrix([sy.symbols(f'd_1{x}') for x in self._variables])
+        j_d1 = self._jacobian.doit()*d1
         
-        for i in range(N):
-            ODE_pert.update({d1[i]: J_d1[i]})
+        for i in range(n):
+            ode_pert.update({d1[i]: j_d1[i]})
 
         # terms of order "2"
         if order == 2:
-            self.calculate_Hessian()
-            d2 = sy.Matrix([sy.symbols(f'd_2{x}') for x in self.VARIABLES])
-            J_d2 = self.JACOBIAN.doit()*d2
-            for i in range(N):
-                C = sy.transpose(d1)*self.HESSIAN[i].doit()*d1
-                ODE_pert.update({d2[i]: J_d2[i] + C[0]})
+            self.calculate_hessian()
+            d2 = sy.Matrix([sy.symbols(f'd_2{x}') for x in self._variables])
+            j_d2 = self._jacobian.doit()*d2
+            for i in range(n):
+                c = sy.transpose(d1)*self._hessian[i].doit()*d1
+                ode_pert.update({d2[i]: j_d2[i] + c[0]})
 
-        return DynamicalSystem(autonomous = ODE_pert)
+        return DynamicalSystem(autonomous = ode_pert)
 
     def new_coupled(self, coupling_matrix = sy.ones(3,3), coupling_function = 'linear', non_identical_parameters=[]):
         '''
         coupling_matrix:   square matrix with dimension N
         coupling function: string directing to a DynamicalSystem object (Sympy expressions with variables of unit system)
-
+        
         To-Do:
         if no specifications are given, impose mean field coupling in first variable with coupling parameter "epsilon"
         '''
 
         # number of units is given by the coupling matrix
-        N = len(np.array(coupling_matrix)[0])
+        n = len(np.array(coupling_matrix)[0])
         
         # create DynamicalSystem for copuling function
-        coupling_function_System = DynamicalSystem(autonomous=coupling_function, variables = self.VARIABLES)
+        coupling_function_system = DynamicalSystem(autonomous=coupling_function, variables = self._variables)
 
         # write ODEs for new indexed variables
-        ODE_new = {}
-        for i in range(N):
-            for var_index in range(self.DIMENSION):
+        ode_new = {}
+        for i in range(n):
+            for var_index in range(self._dimension):
                 # copy autonomous ODE and substitute variables with index
-                ODE_new_temp = self.ODE[var_index].subs(self.get_indexing_dict(i+1)) 
+                ode_new_temp = self._ode[var_index].subs(self.get_indexing_dict(i+1)) 
 
                 # substitute nonidentical parameters with index
                 for parameter in non_identical_parameters:
                     parameter_i = sy.symbols(str(parameter) + '_' + str(i+1))
-                    ODE_new_temp = ODE_new_temp.subs({parameter: parameter_i})
+                    ode_new_temp = ode_new_temp.subs({parameter: parameter_i})
 
                 # add coupling terms
-                for j in range(N):
-                    term = coupling_function_System.ODE[var_index].subs(self.get_indexing_dict(j+1))
-                    ODE_new_temp -= coupling_matrix[i,j]*term
+                for j in range(n):
+                    term = coupling_function_system._ode[var_index].subs(self.get_indexing_dict(j+1))
+                    ode_new_temp -= coupling_matrix[i,j]*term
 
                 # write into dictionary for new indexed variable
-                ODE_new[sy.symbols(str(self.VARIABLES[var_index]) + '_' + str(i+1))] = ODE_new_temp
+                ode_new[sy.symbols(str(self._variables[var_index]) + '_' + str(i+1))] = ode_new_temp
 
-        return DynamicalSystem(autonomous=ODE_new)
+        return DynamicalSystem(autonomous=ode_new)
 
     # numerical features
 
@@ -293,7 +290,7 @@ class DynamicalSystem:
         # get numba-precompiled functions
         # maximum number of arguments = 255 ... 
 
-        f_auto = nb.jit(sy.utilities.lambdify(tuple(self.VARIABLES + self.PARAMETERS), tuple(self.ODE), cse=True), nopython=True)
+        f_auto = nb.jit(sy.utilities.lambdify(tuple(self._variables + self._parameters), tuple(self._ode), cse=True), nopython=True)
 
         # function with the signature to fit into "scipy.integrate.solve_ivp"
         def f_ODEINT(t, state, parameters):            
@@ -309,7 +306,7 @@ class DynamicalSystem:
         return f_ODEINT
 
     def compile_integrator(self, **kwargs) -> None:
-        self.f_ODEINT = self.get_precompiled_integrator(**kwargs)
+        self._f_odeint = self.get_precompiled_integrator(**kwargs)
 
     def get_trajectories(self, t_span, state0 = None, parameter_values={}, max_step=0.01, **kwargs):
         '''
@@ -321,13 +318,13 @@ class DynamicalSystem:
         '''
         # if no state is given, choose randomly
         if state0 is None:
-            state0 = rng.standard_normal(size=self.DIMENSION)
+            state0 = rng.standard_normal(size=self._dimension)
 
         # create a properly ordered list from the dictionary "parameter_values"
-        parameter_list = [parameter_values[p] for p in self.PARAMETERS]
+        parameter_list = [parameter_values[p] for p in self._parameters]
 
         # integrate 
-        states = sc.integrate.solve_ivp(self.f_ODEINT, t_span, state0, args=(parameter_list, ), max_step=max_step, **kwargs)
+        states = sc.integrate.solve_ivp(self._f_odeint, t_span, state0, args=(parameter_list, ), max_step=max_step, **kwargs)
 
         return states
 
@@ -379,30 +376,30 @@ class DynamicalSystem:
         states = np.reshape(np.array(state0), (len(state0),1))
 
         # initialize "Time"
-        Time = np.array([t_start])
+        time = np.array([t_start])
 
         # intialize event counter 
         n = 0
 
-        while n <= N_events and Time[-1] < t_start + T_max:
+        while n <= N_events and time[-1] < t_start + T_max:
             # integrate until event
-            sol = self.get_trajectories((Time[-1], t_start + T_max), 
+            sol = self.get_trajectories((time[-1], t_start + T_max), 
                                         states[:,-1], 
                                         parameter_values=params, 
                                         events=event, **kwargs)
           
             # store results
             states = np.concatenate((states, sol.y), axis=1)
-            Time = np.concatenate((Time, sol.t))
+            time = np.concatenate((time, sol.t))
 
             #print('event found at t=' + str(Time[-1]))
             n += 1
 
             # store event index
-            events_idx.append(len(Time))
+            events_idx.append(len(time))
 
             # iterate through the triggered sequence
-            for T_event, parameters_values_event, state_action in event_settings:
+            for t_event, parameters_values_event, state_action in event_settings:
                 # update parameters
                 params.update(parameters_values_event)
 
@@ -411,13 +408,13 @@ class DynamicalSystem:
                     state_action = lambda state: state
  
                 # integrate with parameter values changed by the event
-                sol = self.get_trajectories((Time[-1], Time[-1] + T_event), 
+                sol = self.get_trajectories((time[-1], time[-1] + t_event), 
                                             state_action(states[:,-1]),
                                             parameter_values=params, **kwargs)
 
                 # store results
                 states = np.concatenate((states, sol.y), axis=1)
-                Time = np.concatenate((Time, sol.t))
+                time = np.concatenate((time, sol.t))
 
             # reset parameters
             params.update(parameter_values)
@@ -425,11 +422,11 @@ class DynamicalSystem:
         # drop the last event
         # because it might be computed by reaching "t_max", not by finding the event
 
-        return states[:,:events_idx[-1]], Time[:events_idx[-1]], events_idx[:-1]
+        return states[:,:events_idx[-1]], time[:events_idx[-1]], events_idx[:-1]
 
-    def get_limit_cycle(self, params, event, 
-                        state0=None, t_eq=100, samples=1000, isostable_expansion_order=0, 
-                        ShowResults = True,
+    def get_limit_cycle(self, params, event,
+                        state0=None, t_eq=100, samples=1000, isostable_expansion_order=0,
+                        show_results = True,
                         **kwargs):
         '''
         returns:
@@ -457,15 +454,15 @@ class DynamicalSystem:
         #    print(sol_eq.t_events[0][i]-sol_eq.t_events[0][i-1])
 
         # period
-        T = sol_eq.t_events[0][-1]-sol_eq.t_events[0][-2]
+        t = sol_eq.t_events[0][-1]-sol_eq.t_events[0][-2]
 
         # frequency
-        omega = 2*np.pi/T
+        omega = 2*np.pi/t
 
-        Time = np.linspace(0, T, samples)
+        time = np.linspace(0, t, samples)
         
-        sol_LC  = self.get_trajectories(t_span=(0., T), 
-                                        t_eval = Time, 
+        sol_lc  = self.get_trajectories(t_span=(0., t), 
+                                        t_eval = time, 
                                         state0 = sol_eq.y_events[0][-1],
                                         parameter_values=params,
                                         **kwargs)
@@ -474,44 +471,44 @@ class DynamicalSystem:
         y = np.zeros((isostable_expansion_order+1, 2, samples))
 
         # grab limit-cycle orbit
-        y[0] = sol_LC.y
+        y[0] = sol_lc.y
 
         extras = []
         if isostable_expansion_order>=1:
 
             ### calculate Jacobian at limit cycle ###
 
-            self.calculate_Jacobian()
-            J_np = sy.utilities.lambdify(tuple(self.VARIABLES), self.JACOBIAN.doit().subs(params), cse=True)
+            self.calculate_jacobian()
+            j_np = sy.utilities.lambdify(tuple(self._variables), self._jacobian.doit().subs(params), cse=True)
             
-            J = np.zeros((self.DIMENSION, self.DIMENSION, samples))
+            j = np.zeros((self._dimension, self._dimension, samples))
 
             for t in range(samples):
-                J[:,:,t] = J_np(*y[0,:,t])
+                j[:,:,t] = j_np(*y[0,:,t])
 
             ### EXTRA 0 ### --> "extra" to dictionary
-            extras.append(J)
+            extras.append(j)
 
             ### calculate fundamental solution matrix ###
 
             system_O1 = self.new_perturbed(order=1)
 
-            fund_matrix = np.zeros((self.DIMENSION, self.DIMENSION, len(Time))) 
-            fund_matrix[:,:,0] = np.eye(self.DIMENSION)
+            fund_matrix = np.zeros((self._dimension, self._dimension, len(time))) 
+            fund_matrix[:,:,0] = np.eye(self._dimension)
 
-            for n in range(self.DIMENSION):
+            for n in range(self._dimension):
                 # design the initial state
-                state0 = np.zeros(2*self.DIMENSION)
-                state0[:self.DIMENSION] = y[0,:,0]
-                state0[self.DIMENSION + n] = 1.
+                state0 = np.zeros(2*self._dimension)
+                state0[:self._dimension] = y[0,:,0]
+                state0[self._dimension + n] = 1.
 
-                sol = system_O1.get_trajectories(t_span=(0,Time[-1]),
-                                                t_eval=Time,
+                sol = system_O1.get_trajectories(t_span=(0,time[-1]),
+                                                t_eval=time,
                                                 state0=state0,
                                                 parameter_values=params,
                                                 **kwargs)
 
-                fund_matrix[:,n,:] = sol.y[self.DIMENSION:,:]
+                fund_matrix[:,n,:] = sol.y[self._dimension:,:]
             
             ### EXTRA 1 ###
             extras.append(fund_matrix)
@@ -522,65 +519,65 @@ class DynamicalSystem:
             non_unity_eigenvec = eigenvecs.transpose()[np.abs(eigenvals-1) > 1e-4][0]
 
             # this is numerical unstable for large |kappa|, consider changing to trace formula
-            kappa_trace = integrate.trapezoid(np.trace(J, axis1=0, axis2=1), Time)/T
-            kappa_monod = np.log(np.min(eigenvals))/T
+            kappa_trace = integrate.trapezoid(np.trace(j, axis1=0, axis2=1), time)/t
+            kappa_monod = np.log(np.min(eigenvals))/t
             
             ### EXTRA 2 & 3 ###
             extras.append(kappa_trace)
             extras.append(kappa_monod)
             
-            y[1] = np.array([np.exp(-kappa_trace*Time[t])*np.matmul(fund_matrix[:,:,t], non_unity_eigenvec) for t in range(len(Time))]).transpose()
+            y[1] = np.array([np.exp(-kappa_trace*time[t])*np.matmul(fund_matrix[:,:,t], non_unity_eigenvec) for t in range(len(time))]).transpose()
             #y[1] = np.array([np.power(np.min(w),-Time[t]/Time[-1])*np.matmul(fund_matrix[:,:,t], non_unity_eigenvec) for t in range(len(Time))]).transpose()
 
             if isostable_expansion_order>=2:
 
                 ### calculate special solution for d2 ###
 
-                system_O2 = self.new_perturbed(order=2)
+                system_o2 = self.new_perturbed(order=2)
 
-                state0 = np.zeros(3*self.DIMENSION)
-                state0[:self.DIMENSION] = y[0,:,0]
-                state0[self.DIMENSION: 2*self.DIMENSION] = non_unity_eigenvec
+                state0 = np.zeros(3*self._dimension)
+                state0[:self._dimension] = y[0,:,0]
+                state0[self._dimension: 2*self._dimension] = non_unity_eigenvec
 
-                sol = system_O2.get_trajectories(t_span=(0,Time[-1]),
-                                                t_eval=Time,
+                sol = system_o2.get_trajectories(t_span=(0,time[-1]),
+                                                t_eval=time,
                                                 state0=state0,
                                                 parameter_values=params)
                 
-                d2_special = sol.y[2*self.DIMENSION:,:]
+                d2_special = sol.y[2*self._dimension:,:]
 
-                y2_data_ini = np.matmul(np.linalg.inv(np.exp(2.*kappa_trace*Time[-1])*np.eye(2)-fund_matrix[:,:,-1]), d2_special[:,-1])
-                y[2] = np.array([np.exp(-2.*kappa_trace*Time[t])*(np.matmul(fund_matrix[:,:,t], y2_data_ini[:]) + d2_special[:,t]) for t in range(len(Time))]).transpose()
+                y2_data_ini = np.matmul(np.linalg.inv(np.exp(2.*kappa_trace*time[-1])*np.eye(2)-fund_matrix[:,:,-1]), d2_special[:,-1])
+                y[2] = np.array([np.exp(-2.*kappa_trace*time[t])*(np.matmul(fund_matrix[:,:,t], y2_data_ini[:]) + d2_special[:,t]) for t in range(len(time))]).transpose()
 
                 ### EXTRA 4 ###
                 extras.append(d2_special)
 
-        if ShowResults == True:            
-            print(f'period = {T}')
+        if show_results == True:            
+            print(f'period = {t}')
             print(f'frequency = {omega}')
             print(f'Floquet exponent (calculated by Jacobian trace)   = {kappa_trace}')
             print(f'Floquet exponent (calculated by Monodromy matrix) = {kappa_monod}')
 
-        return Time, y, extras
+        return time, y, extras
 
     def get_isochrones_isostables(self, params, event, r = 1e-7, t_max = [20,20], kwargs_limit_cycle={}, **kwargs_int):
         '''infer phase-isostable structure for 2D system by backward integration'''
 
         # obtain limit cycle
-        Time, y, extras = self.get_limit_cycle(params, event, isostable_expansion_order=1,
+        time, y, extras = self.get_limit_cycle(params, event, isostable_expansion_order=1,
                                          **kwargs_limit_cycle,
-                                         #t_eq=250, state0=[1.,1.], 
-                                         #samples=samples, 
+                                         #t_eq=250, state0=[1.,1.],
+                                         #samples=samples,
                                          **kwargs_int)
 
         # time-inverted system
         system_inv = self.new_time_inverted()
 
         # initial curve
-        samples = len(Time)-1
+        samples = len(time)-1
 
-        T = Time[-1]
-        time_samples = [np.arange(0, t_max, T/samples) for t_max in t_max]
+        t = time[-1]
+        time_samples = [np.arange(0, t_max, t/samples) for t_max in t_max]
 
         states = dict()
 
@@ -606,14 +603,14 @@ class DynamicalSystem:
                 temp.fill(np.inf)
 
                 if len(sol.y) > 0:
-                    y_T = sol.y.T
-                    temp[:len(y_T[:,0]), :len(y_T[0,:])] = y_T
+                    y_t = sol.y.T
+                    temp[:len(y_t[:,0]), :len(y_t[0,:])] = y_t
                 
                 states[sign][s,:,:] = temp
 
             # rolling the states times further in time to form isochrones
             
-            for t,T in enumerate(time_samples[z][:]):
+            for t,t in enumerate(time_samples[z][:]):
                 for i in [0,1]:
                     states[sign][:,t,i] = np.roll(states[sign][:,t,i],-t)
 
@@ -638,7 +635,7 @@ class DynamicalSystem:
 
         '''
 
-        if self.DIMENSION != 2:
+        if self._dimension != 2:
             print('This works only for 2-dimensional systems!')
             return 
 
@@ -648,13 +645,13 @@ class DynamicalSystem:
         #x0 = [self.VARIABLES[i].subs(fp) for i in range(self.Dim)
 
         # compute Jacobian at fixed point "fp[0]"
-        self.calculate_Jacobian()
-        DF = self.JACOBIAN.doit().subs(fp[0]).subs(params)
-        print(DF)
-        DF_np = np.array(DF).astype(np.float64)
+        self.calculate_jacobian()
+        df = self._jacobian.doit().subs(fp[0]).subs(params)
+        print(df)
+        df_np = np.array(df).astype(np.float64)
 
         # compute eigenvalues and left eigenvector numerically
-        eigenvalues, eigenvectors = np.linalg.eig(np.transpose(DF_np))
+        eigenvalues, eigenvectors = np.linalg.eig(np.transpose(df_np))
         
         if np.imag(eigenvalues[0]) == 0:
             print('This function works only for fixed points of focus type!')
@@ -687,7 +684,7 @@ class DynamicalSystem:
         TODO    check for degenerate case of eigenvalues with multipl. > 1
         '''
 
-        if self.DIMENSION != 2:
+        if self._dimension != 2:
             print('This function is still only implemented for 2-dimensional systems.')
             return list()
         
@@ -695,7 +692,7 @@ class DynamicalSystem:
         system = self.new_parameter_set(params)
 
         # compute Jacobian
-        system.calculate_Jacobian()
+        system.calculate_jacobian()
 
         # compute fixed points
         fixed_points = system.get_fixed_points()
@@ -704,13 +701,13 @@ class DynamicalSystem:
 
         for fp in fixed_points:
             # Jacobian at fixed point 
-            DF = system.JACOBIAN.doit().subs(fp)
+            df = system._jacobian.doit().subs(fp)
             
-            DF_np = np.array(DF).astype(np.float64)
+            df_np = np.array(df).astype(np.float64)
             fp_np = np.array(list(fp.values())).astype(np.float64)
 
             # compute eigenvalues and right eigenvectors numerically
-            eigenvalues, eigenvectors_right = np.linalg.eig(DF_np)
+            eigenvalues, eigenvectors_right = np.linalg.eig(df_np)
 
             c1 = eigenvectors_right[:,0]
             c2 = eigenvectors_right[:,1]
@@ -763,19 +760,17 @@ class DynamicalSystem:
 
     def get_time_averaged_Jacobian(self, params, **kwargs):
         #'''this function calculates the angular frequency and the Floquet exponent of a 2D limit cycle system'''
-        
-        #T, x0, y0 = self.get_limit_cycle(params, **kwargs_LC)
-        
-        self.calculate_Jacobian()
-        J_np = sy.utilities.lambdify(tuple(self.VARIABLES), self.JACOBIAN.doit().subs(params), cse=True)
+
+        self.calculate_jacobian()
+        j_np = sy.utilities.lambdify(tuple(self._variables), self._jacobian.doit().subs(params), cse=True)
         
         sol = self.get_trajectories(parameter_values=params, **kwargs)
 
-        J_int = np.zeros((self.DIMENSION, self.DIMENSION, len(sol.t)))
+        j_int = np.zeros((self._dimension, self._dimension, len(sol.t)))
 
-        for i in range(self.DIMENSION):
-            for j in range(self.DIMENSION):
-                J_ij_at_LC = [J_np(sol.y[0,t], sol.y[1,t])[i,j] for t in range(len(sol.t))]
-                J_int[i,j] = integrate.cumulative_trapezoid(J_ij_at_LC, sol.t, initial=0)/(sol.t[-1]-sol.t[0]) 
+        for i in range(self._dimension):
+            for j in range(self._dimension):
+                j_ij_at_LC = [j_np(sol.y[0,t], sol.y[1,t])[i,j] for t in range(len(sol.t))]
+                j_int[i,j] = integrate.cumulative_trapezoid(j_ij_at_LC, sol.t, initial=0)/(sol.t[-1]-sol.t[0])
 
-        return J_int
+        return j_int
