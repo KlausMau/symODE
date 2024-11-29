@@ -5,10 +5,8 @@ import sympy as sy
 import numba as nb
 from IPython.core.display import display, Math
 
-from scipy import integrate #, interpolate, optimize
-#from matplotlib import cm
+from scipy import integrate
 import SystemsCatalogue
-#import CircularRealFunction as cf
 
 rng = np.random.default_rng(12345)
 
@@ -281,9 +279,10 @@ class DynamicalSystem:
 
     # numerical features
 
-    def get_precompiled_integrator(self, stimulation = nb.njit(lambda t : 0), clean_sympy_expressions=False):
+    def get_precompiled_integrator(self):
         '''
-        Compile the integrator, ready to be fed into "sc.integrate.solve_ivp"
+        compiles the integrator and returns a function with the
+        signature to fit into "scipy.integrate.solve_ivp"
 
         Still to add and verify:
         - add external "stimulation" as time-dependent function
@@ -291,27 +290,14 @@ class DynamicalSystem:
         - precompile "f_ODEINT" with Numba
         '''
 
-        # simplify evaluates remaining formal derivatives
-        #if clean_sympy_expressions == True:
-        #    f_auto_sy = sy.cancel(sy.simplify(f_auto_sy))
-        #    f_ext_sy  = sy.cancel(sy.simplify(f_ext_sy))
-
-        # get numba-precompiled functions
-        # maximum number of arguments = 255 ...
-
+        # get numba-precompiled functions (maximum number of arguments is 255 ...)
         f_auto = nb.jit(sy.utilities.lambdify(tuple(self._variables + self._parameters),
                                               tuple(self._ode), cse=True), nopython=True)
 
-        # function with the signature to fit into "scipy.integrate.solve_ivp"
         def f_odeint(t, state, parameters):
             # combine "state" and "parameters" to new "arguments" list variable
             arguments = list(state) + list(parameters)
-            #state_I = list(state) + [I_ext] + list(parameters)
-            #print(type(f_ext(*arguments)))
-            #print(type(f_auto(*arguments)))
-
-            #return tuple(map(sum, zip(f_auto(*arguments), tuple(val_ext*stimulation(t) for val_ext in f_ext(*arguments)))))
-            return f_auto(*arguments)#, )
+            return f_auto(*arguments)
 
         return f_odeint
 
@@ -339,34 +325,6 @@ class DynamicalSystem:
                                         args=(parameter_list, ), max_step=max_step, **kwargs)
 
         return states
-
-    # def get_trajectories_numbalsoda(self):
-    #     f_auto = nb.jit(sy.utilities.lambdify(tuple(self.VARIABLES + self.PARAMETERS), tuple(self.ODE)), nopython=True)
-
-    #     @nb.cfunc(lsoda_sig)
-    #     def rhs(t, u, du, p):
-    #         arguments = list(u) + list(p)
-    #         du = f_auto(*arguments)
-    #         #du[0] = u[0]-u[0]*u[1]
-    #         #du[1] = u[0]*u[1]-u[1]*p[0]
-
-    #     #rhs = nb.cfunc()
-
-    #     funcptr = rhs.address # address to ODE function
-    #     u0 = np.array([5.,0.8]) # Initial conditions
-    #     data = np.array([1.0]) # data you want to pass to rhs (data == p in the rhs).
-    #     t_eval = np.linspace(0.0, 50.0, 1000) # times to evaluate solution
-
-    #     # integrate with lsoda method
-    #     usol, success = lsoda(funcptr, u0, t_eval, data = data)
-    #     print(success)
-    #     # integrate with dop853 method
-    #     #usol1, success1 = dop853(funcptr, u0, t_eval, data = data)
-
-    #     # usol = solution
-    #     # success = True/False
-
-    #     return usol
 
     def get_event_based_evolution(self, state0, parameter_values, event, event_settings,
                                   t_start=0, n_events=10, time_max=100, **kwargs):
