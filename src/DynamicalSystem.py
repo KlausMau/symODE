@@ -12,23 +12,15 @@ rng = np.random.default_rng(12345)
 
 class DynamicalSystem:
     '''
-    This is a class to deal in numerical and analytical aspect with dynamical systems of the form
+    A class to deal with dynamical systems of the form
 
     dx/dt = F(x,t)      with state variable x € R^N
 
-    N-dimensional function F is given as dictionary:
-    ----------------------------------------------
-    F   autonomous      autonomous dynamics
-
-    Future features:
-    - adapt functions to non-autonmous F(x,t)
-    - store ODE also as dictionary
+    in numerical (SciPy) and analytical (SymPy) aspects.
 
     Naming conventions:
     "get_X" returns an output and DO NOT change the object
     "set_X" can return an output, DO change the object
-
-    The used coding convention is PEP8.
     '''
 
     def __init__(self, autonomous, autocompile_integrator=True, **params) -> None:
@@ -158,10 +150,7 @@ class DynamicalSystem:
     # return a new DynamicalSystem object
 
     def new_parameter_set(self, params):
-        ''' returns a new DynamicalSystem with fixed parameter values
-
-        TODO : this function would benefit from "ODE" being a dictionary
-        '''
+        ''' returns a new DynamicalSystem with fixed parameter values'''
 
         ode_new = {}
         for i, variable in enumerate(self._variables):
@@ -242,10 +231,6 @@ class DynamicalSystem:
         coupling_matrix:   square matrix with dimension N
         coupling function: string directing to a DynamicalSystem object
         (Sympy expressions with variables of unit system)
-
-        To-Do:
-        if no specifications are given, impose mean field coupling in first variable
-        with coupling parameter "epsilon"
         '''
 
         # number of units is given by the coupling matrix
@@ -653,10 +638,6 @@ class DynamicalSystem:
         -------
         output : list
             A list of functions that map from isostable to original coordinates
-
-
-        TODO    review whether the new DynamicalSystem is really necessary
-        TODO    check for degenerate case of eigenvalues with multipl. > 1
         '''
 
         if self._dimension != 2:
