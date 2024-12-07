@@ -314,7 +314,8 @@ class DynamicalSystem:
     def get_event_based_evolution(self, state0, parameter_values, event, event_settings,
                                   t_start=0, n_events=10, time_max=100, **kwargs):
         '''
-        returns the trajectories for an evolution whose parameters change every time an event is found
+        returns the trajectories for an evolution whose parameters change every time an event is
+        found
 
         N_events:       maximum number of event findings
         event_settings: list of tuples of duration "T_event" and parameters "parameter_values_event"
