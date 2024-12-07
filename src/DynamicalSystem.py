@@ -57,15 +57,15 @@ class DynamicalSystem:
 
     def show(self) -> None:
         '''prints the LaTeX code'''
-        display(Math(rf'{self.get_ode_latex()}'))
+        display(Math(rf'{self.get_dynamical_equations_in_latex()}'))
 
-    def get_ode_latex(self):
+    def get_dynamical_equations_in_latex(self) -> str:
+        '''returns the LaTeX string of the dynamical equations'''
         ode_latex = '$'
         for i in range(self._dimension):
-            ode_latex += '\dot {} = {} \\\\ '.format(sy.latex(self._variables[i]), sy.latex(self._ode[i]))
+            ode_latex += rf'\dot {sy.latex(self._variables[i])} = {sy.latex(self._ode[i])} \\\\'
         ode_latex += '$'
-
-        return ode_latex[:]
+        return ode_latex
 
     def get_indexing_dict(self, index):
         '''
