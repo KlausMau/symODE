@@ -149,23 +149,18 @@ class DynamicalSystem:
 
     # return a new DynamicalSystem object
 
-    def new_parameter_set(self, params):
-        ''' returns a new DynamicalSystem with fixed parameter values'''
+    def get_new_system_with_fixed_parameters(self, parameter_values: dict):
+        ''' returns a new dynamical system with fixed parameter values'''
+        new_system = DynamicalSystem(self._dynamical_equations)
+        new_system.set_parameter_value(parameter_values)
+        return new_system
 
-        ode_new = {}
-        for i, variable in enumerate(self._variables):
-            # is the - a bug?
-            ode_new.update({variable: -self._ode[i]})
-
-        system_new = DynamicalSystem(autonomous = ode_new)
-        system_new.set_parameter_value(params)
-        return system_new
-
-    def new_time_inverted(self):
-        ode_new = {}
-        for i, variable in enumerate(self._variables):
-            ode_new.update({variable: -self._ode[i]})
-        return DynamicalSystem(autonomous = ode_new)
+    def get_new_system_with_inverted_time(self):
+        ''' returns a new dynamical system with inverted time'''
+        new_dynamical_equations = {}
+        for var in self._variables:
+            new_dynamical_equations.update({var: -self._dynamical_equations[var]})
+        return DynamicalSystem(new_dynamical_equations)
 
     def new_transformed(self, new_variables, equations, **kwargs):
         '''
@@ -529,7 +524,7 @@ class DynamicalSystem:
                                          **kwargs_int)
 
         # time-inverted system
-        system_inv = self.new_time_inverted()
+        system_inv = self.get_new_system_with_inverted_time()
 
         # initial curve
         samples = len(time)-1
@@ -646,7 +641,7 @@ class DynamicalSystem:
             return list()
 
         # new DynamicalSystem with fixed parameters
-        system = self.new_parameter_set(params)
+        system = self.get_new_system_with_fixed_parameters(params)
 
         # compute Jacobian
         system.calculate_jacobian()
