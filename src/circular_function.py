@@ -1,4 +1,4 @@
-'''Module providing '''
+'''Module for circular real functions f: [0,2pi) -> R'''
 
 import numpy as np
 from scipy import optimize
