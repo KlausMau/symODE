@@ -1,4 +1,5 @@
 import copy
+import itertools
 import numpy as np
 import scipy as sc
 import sympy as sy
@@ -62,8 +63,8 @@ class DynamicalSystem:
     def get_dynamical_equations_in_latex(self) -> str:
         '''returns the LaTeX string of the dynamical equations'''
         ode_latex = '$'
-        for i in range(self._dimension):
-            ode_latex += rf'\dot {sy.latex(self._variables[i])} = {sy.latex(self._ode[i])} \\\\'
+        for var in self._variables:
+            ode_latex += rf'\dot {sy.latex(var)} = {sy.latex(self._dynamical_equations[var])} \\\\'
         ode_latex += '$'
         return ode_latex
 
@@ -85,9 +86,9 @@ class DynamicalSystem:
         if Jacobian = True: the returned dictionary is equipped with another key Jacobian
         '''
         try:
-            fixed_points = sy.solve(self._ode, self._variables, dict=True)
+            fixed_points = sy.solve(self._dynamical_equations, self._variables, dict=True)
         except NotImplementedError:
-            fixed_points = sy.nsolve(self._ode, self._variables, np.zeros(self._dimension),
+            fixed_points = sy.nsolve(self._dynamical_equations, self._variables, np.zeros(self._dimension),
                                      dict=True)
 
         if jacobian is True:
@@ -117,7 +118,8 @@ class DynamicalSystem:
             idx = indeces[0]
 
             # add to ODE
-            self._ode[idx] += term
+            self._dynamical_equations[idx] += term
+
         # add new parameters
         new_parameters = list(set(term.free_symbols)-set(self._variables)-set(self._parameters))
         self._parameters += new_parameters
@@ -127,12 +129,11 @@ class DynamicalSystem:
 
     def calculate_jacobian(self) -> None:
         '''compute Jacobian of system'''
-        n = self._dimension
-        self._jacobian = sy.ones(n)
-        for i in range(n):
-            for j in range(n):
-                self._jacobian[i,j] = sy.Derivative(self._ode[i], self._variables[j])
-        return
+        self._jacobian = sy.ones(self._dimension)
+        for i, j in itertools.product(range(self._dimension), range(self._dimension)):
+            var_i = self._variables[i]
+            var_j = self._variables[j]
+            self._jacobian[i,j] = sy.Derivative(self._dynamical_equations[var_i], var_j)
 
     def calculate_hessian(self) -> None:
         '''compute Hessian tensor of system'''
@@ -142,7 +143,7 @@ class DynamicalSystem:
             temp = sy.ones(n)
             for i in range(n):
                 for j in range(n):
-                    temp[i,j] = sy.Derivative(sy.Derivative(self._ode[v], self._variables[j]),
+                    temp[i,j] = sy.Derivative(sy.Derivative(self._dynamical_equations[v], self._variables[j]),
                                               self._variables[i])
             self._hessian.append(temp)
         return
@@ -178,7 +179,7 @@ class DynamicalSystem:
         # invert Jacobian
         #try:, except
         jacobian_inv = jacobian.inv().doit()
-        ode_new = jacobian_inv*self._ode.subs(equations)
+        ode_new = jacobian_inv*self._dynamical_equations.subs(equations)
 
         # put into dictionary
         ode_dict = {}
@@ -198,7 +199,7 @@ class DynamicalSystem:
         # terms of order "0"
         ode_pert = {}
         for i in range(n):
-            ode_pert.update({self._variables[i]: self._ode[i]})
+            ode_pert.update({self._variables[i]: self._dynamical_equations[i]})
 
         # terms of order "1"
         self.calculate_jacobian()
@@ -217,7 +218,7 @@ class DynamicalSystem:
                 c = sy.transpose(d1)*self._hessian[i].doit()*d1
                 ode_pert.update({d2[i]: j_d2[i] + c[0]})
 
-        return DynamicalSystem(autonomous = ode_pert)
+        return DynamicalSystem(dynamical_equations = ode_pert)
 
     def new_coupled(self, coupling_matrix = sy.ones(3,3),
                     coupling_function = 'linear',
@@ -232,7 +233,7 @@ class DynamicalSystem:
         n = len(np.array(coupling_matrix)[0])
 
         # create DynamicalSystem for copuling function
-        coupling_function_system = DynamicalSystem(autonomous=coupling_function,
+        coupling_function_system = DynamicalSystem(dynamical_equations=coupling_function,
                                                    variables = self._variables)
 
         # write ODEs for new indexed variables
@@ -240,7 +241,7 @@ class DynamicalSystem:
         for i in range(n):
             for var_index in range(self._dimension):
                 # copy autonomous ODE and substitute variables with index
-                ode_new_temp = self._ode[var_index].subs(self.get_indexing_dict(i+1))
+                ode_new_temp = self._dynamical_equations[var_index].subs(self.get_indexing_dict(i+1))
 
                 # substitute nonidentical parameters with index
                 for parameter in non_identical_parameters:
@@ -249,13 +250,13 @@ class DynamicalSystem:
 
                 # add coupling terms
                 for j in range(n):
-                    term = coupling_function_system._ode[var_index].subs(self.get_indexing_dict(j+1))
+                    term = coupling_function_system._dynamical_equations[var_index].subs(self.get_indexing_dict(j+1))
                     ode_new_temp -= coupling_matrix[i,j]*term
 
                 # write into dictionary for new indexed variable
                 ode_new[sy.symbols(str(self._variables[var_index]) + '_' + str(i+1))] = ode_new_temp
 
-        return DynamicalSystem(autonomous=ode_new)
+        return DynamicalSystem(dynamical_equations=ode_new)
 
     # numerical features
 
@@ -272,7 +273,8 @@ class DynamicalSystem:
 
         # get numba-precompiled functions (maximum number of arguments is 255 ...)
         f_auto = nb.jit(sy.utilities.lambdify(tuple(self._variables + self._parameters),
-                                              tuple(self._ode), cse=True), nopython=True)
+                                              tuple(self._dynamical_equations), cse=True),
+                                              nopython=True)
 
         def f_odeint(t, state, parameters):
             # combine "state" and "parameters" to new "arguments" list variable
