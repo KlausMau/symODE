@@ -55,15 +55,14 @@ class DynamicalSystem:
         self._variables = self._dynamical_equations.keys()
         self._dimension = len(self._variables)
 
-        # values -> ODEs (Sympy matrix, fixes the order of variables!)
-        self._ode = sy.Matrix(list(autonomous.values()))
+        all_symbols = sy.Matrix(list(self._dynamical_equations.values())).free_symbols
+        self._parameters = list(set(all_symbols)-set(self._variables))
 
-        # every other symbol appearing in the ODEs apart from variables
-        self._parameters = list(set(self._ode.free_symbols)-set(self._variables))
+        self._jacobian = sy.Matrix()
+        self._hessian : list[sy.Matrix] = []
 
-        # compile integrator function
-        if autocompile_integrator is True:
-            self._f_odeint = self.get_precompiled_integrator()
+        if compile_integrator is True:
+            self.compile_integrator()
 
     # convenience features
 
