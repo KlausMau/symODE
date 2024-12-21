@@ -87,6 +87,10 @@ class CircularRealFunction:
                               for i in range(maximum_mode_number-1)]
         self._fourier_modes = np.array([sincos_modes[0]] + non_constant_modes)
 
+    def get_fourier_modes(self) -> np.ndarray:
+        '''returns the Fourier modes of the function'''
+        return self._fourier_modes
+
     def get_values_at(self, x):
         '''
         returns Numpy array with the function values of "x" (same size)
@@ -103,34 +107,6 @@ class CircularRealFunction:
         fourier_modes = np.array([(-1j*n)*fn for n, fn in enumerate(self._fourier_modes)],
                                  dtype=complex)
         return CircularRealFunction(fourier_modes=fourier_modes)
-
-    def get_multiplication(self, g) -> 'CircularRealFunction':
-        '''returns the product of the function with another function g'''
-        f_modes = self._fourier_modes
-        g_modes = g.FOURIER_MODES
-
-        n_f = f_modes.size - 1
-        n_g = g_modes.size - 1
-        n_h = n_f + n_g
-        h_modes = np.zeros(n_h + 1, dtype=complex)
-
-        for k in range(h_modes.size):
-            l = 1
-            while l <= np.min([n_f-k, n_g]):
-                h_modes[k] += f_modes[k+l]*np.conj(g_modes[l])
-                l+=1
-
-            l = np.max([0, k-n_f])
-            while l <= np.min([k, n_g]):
-                h_modes[k] += f_modes[k-l]*g_modes[l]
-                l+=1
-
-            l = k+1
-            while l <= np.min([n_f+k, n_g]):
-                h_modes[k] += np.conj(f_modes[l-k])*g_modes[l]
-                l+=1
-
-        return CircularRealFunction(fourier_modes=h_modes)
 
     def get_minimum(self, samples = 100):
         '''return argument and value for minimum'''
@@ -162,3 +138,31 @@ class CircularRealFunction:
         '''return value and sign of derivative for given argument'''
         df = self.get_derivative()
         return np.array([self.get_values_at(x), np.sign(df.get_values_at(x))])
+
+def multiply(f: CircularRealFunction, g: CircularRealFunction) -> 'CircularRealFunction':
+    '''returns the product of the function with another function g'''
+    f_fourier_modes = f.get_fourier_modes()
+    g_fourier_modes = g.get_fourier_modes()
+
+    n_f = f_fourier_modes.size - 1
+    n_g = g_fourier_modes.size - 1
+    n_h = n_f + n_g
+    h_modes = np.zeros(n_h + 1, dtype=complex)
+
+    for k in range(h_modes.size):
+        l = 1
+        while l <= np.min([n_f-k, n_g]):
+            h_modes[k] += f_fourier_modes[k+l]*np.conj(g_fourier_modes[l])
+            l+=1
+
+        l = np.max([0, k-n_f])
+        while l <= np.min([k, n_g]):
+            h_modes[k] += f_fourier_modes[k-l]*g_fourier_modes[l]
+            l+=1
+
+        l = k+1
+        while l <= np.min([n_f+k, n_g]):
+            h_modes[k] += np.conj(f_fourier_modes[l-k])*g_fourier_modes[l]
+            l+=1
+
+    return CircularRealFunction(fourier_modes=h_modes)
