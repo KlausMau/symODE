@@ -120,14 +120,12 @@ class DynamicalSystem:
         self.compile_integrator()
 
     def add_term(self, target_variables, term) -> None:
-        # this function is preliminary
+        '''adds a term to the dynamical system'''
 
         for x in target_variables:
-
             # find index of target variables
             indeces = [i for i, variable in enumerate(self._variables) if variable == x]
             idx = indeces[0]
-
             # add to ODE
             self._dynamical_equations[idx] += term
 
