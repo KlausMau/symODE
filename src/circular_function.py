@@ -1,13 +1,14 @@
+'''Module providing '''
+
 import numpy as np
 from scipy import optimize
 
-def min_sqsum(a,b):
-    '''
-    returns c from overdetermined linear equation a*c = b by method of least squares
-    '''
-    return np.linalg.solve(a.transpose().dot(a), a.transpose().dot(b))
+def min_sqsum(matrix, y):
+    '''returns x from overdetermined linear equation matrix*x = y by method of least squares'''
+    return np.linalg.solve(matrix.transpose().dot(matrix), matrix.transpose().dot(y))
 
 class CircularRealFunction:
+    '''class for circular real functions f: [0,2pi) -> R'''
 
     def __init__(self, fourier_modes = np.array([0.])) -> None:
         '''initialize a CircularRealFunction (default: zero function)'''
@@ -15,7 +16,7 @@ class CircularRealFunction:
 
     def shift_by(self, phi0: float) -> None:
         '''shift the Fourier modes by "phi0" '''
-        for n in range(len(self._fourier_modes)):
+        for n, _ in enumerate(self._fourier_modes):
             # f_k |-> f_k * e^(i*k*phi0))
             self._fourier_modes[n] *= np.exp(1j*n*phi0)
 
@@ -58,10 +59,14 @@ class CircularRealFunction:
     def set_from_sincos_modes(self, sincos_modes) -> None:
         '''sets the function from modes '''
         maximum_mode_number = int((len(sincos_modes)+1)/2)
-        self._fourier_modes = np.array([sincos_modes[0]] + [0.5*(sincos_modes[2*i+1] + 1j*sincos_modes[2*i+2]) for i in range(maximum_mode_number-1)])
+        non_constant_modes = [0.5*(sincos_modes[2*i+1] + 1j*sincos_modes[2*i+2])
+                              for i in range(maximum_mode_number-1)]
+        self._fourier_modes = np.array([sincos_modes[0]] + non_constant_modes)
 
-    def set_zero_at(self, value, direction=1, guesses = [0., np.pi]) -> None:
+    def set_zero_at(self, value, direction=1, guesses = None) -> None:
         '''shift f such that f(0) = value and sign(f'(0)) = dir'''
+        if guesses is None:
+            guesses = [0., np.pi]
 
         # search for all arguments x0 with f(x0)=value
         x0 = []
@@ -73,7 +78,7 @@ class CircularRealFunction:
         df = self.get_derivative()
         i = 0
         stop = False
-        while stop==False and i<len(x0):
+        while stop is False and i<len(x0):
             if np.sign(df.get_values_at(x0[i])) == direction:
                 stop = True
             else:
@@ -87,20 +92,20 @@ class CircularRealFunction:
         returns Numpy array with the function values of "x" (same size)
         f(x) = f_0 + 2*sum_i=1^N Re(f_i*exp(-ikx))
         '''
-
         f_modes = self._fourier_modes
         np_x = np.array(x)
-        return np.real(f_modes[0]*np.ones(np_x.size) + 2*np.sum([f_modes[k]*np.exp(-1j*k*np_x) for k in range(1, f_modes.size)], axis=0))
+        temporary_name = 2*np.sum([f_modes[k]*np.exp(-1j*k*np_x) for k in range(1, f_modes.size)],
+                                  axis=0)
+        return np.real(f_modes[0]*np.ones(np_x.size) + temporary_name)
 
-    def get_derivative(self):
-        '''return a "CircularFunction" being the derivative of "self" '''
-        f_modes = self._fourier_modes
-        df = CircularRealFunction()
-        df._fourier_modes = np.array([(-1j*n)*f_modes[n] for n in range(len(f_modes))], dtype=complex)
-        return df
+    def get_derivative(self) -> 'CircularRealFunction':
+        '''returns the derivative of the function'''
+        fourier_modes = np.array([(-1j*n)*fn for n, fn in enumerate(self._fourier_modes)],
+                                 dtype=complex)
+        return CircularRealFunction(fourier_modes=fourier_modes)
 
-    def get_multiplication(self, g):
-        '''return a "CircularRealFunction" being the multiplication "self" with another "CircularRealFunction"'''
+    def get_multiplication(self, g) -> 'CircularRealFunction':
+        '''returns the product of the function with another function g'''
         f_modes = self._fourier_modes
         g_modes = g.FOURIER_MODES
 
@@ -125,9 +130,7 @@ class CircularRealFunction:
                 h_modes[k] += np.conj(f_modes[l-k])*g_modes[l]
                 l+=1
 
-        h = CircularRealFunction()
-        h._fourier_modes = h_modes
-        return h
+        return CircularRealFunction(fourier_modes=h_modes)
 
     def get_min(self, samples = 100):
         '''return argument and value for minimum'''
