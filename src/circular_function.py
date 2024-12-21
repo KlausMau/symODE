@@ -20,8 +20,32 @@ class CircularRealFunction:
             # f_k |-> f_k * e^(i*k*phi0))
             self._fourier_modes[n] *= np.exp(1j*n*phi0)
 
-    def centre_at(self, phi0: float) -> None:
-        '''centre the distribution at "phi0" '''
+    def shift_with_zero_at(self, value, direction=1, guesses = None) -> None:
+        '''shift f such that f(0) = value and sign(f'(0)) = dir'''
+        if guesses is None:
+            guesses = [0., np.pi]
+
+        # search for all arguments x0 with f(x0)=value
+        x0 = []
+        for guess in guesses:
+            roots = optimize.root(lambda x: self.get_values_at(x)-value, guess)
+            x0.extend(roots.x)
+
+        # select first that matches the direction
+        df = self.get_derivative()
+        i = 0
+        stop = False
+        while stop is False and i<len(x0):
+            if np.sign(df.get_values_at(x0[i])) == direction:
+                stop = True
+            else:
+                i += 1
+
+        # shift f
+        self.shift_by(-x0[i])
+
+    def shift_with_mean_at(self, phi0: float) -> None:
+        '''shift the function such the mean is at "phi0" '''
         theta = np.angle(self._fourier_modes[1])
         self.shift_by(phi0-theta)
 
@@ -62,30 +86,6 @@ class CircularRealFunction:
         non_constant_modes = [0.5*(sincos_modes[2*i+1] + 1j*sincos_modes[2*i+2])
                               for i in range(maximum_mode_number-1)]
         self._fourier_modes = np.array([sincos_modes[0]] + non_constant_modes)
-
-    def set_zero_at(self, value, direction=1, guesses = None) -> None:
-        '''shift f such that f(0) = value and sign(f'(0)) = dir'''
-        if guesses is None:
-            guesses = [0., np.pi]
-
-        # search for all arguments x0 with f(x0)=value
-        x0 = []
-        for guess in guesses:
-            roots = optimize.root(lambda x: self.get_values_at(x)-value, guess)
-            x0.extend(roots.x)
-
-        # select first that matches the direction
-        df = self.get_derivative()
-        i = 0
-        stop = False
-        while stop is False and i<len(x0):
-            if np.sign(df.get_values_at(x0[i])) == direction:
-                stop = True
-            else:
-                i += 1
-
-        # shift f
-        self.shift_by(-x0[i])
 
     def get_values_at(self, x):
         '''
@@ -132,7 +132,7 @@ class CircularRealFunction:
 
         return CircularRealFunction(fourier_modes=h_modes)
 
-    def get_min(self, samples = 100):
+    def get_minimum(self, samples = 100):
         '''return argument and value for minimum'''
         x = np.linspace(0, 2.*np.pi, samples)
         y = self.get_values_at(x)
@@ -145,7 +145,7 @@ class CircularRealFunction:
 
         return argument, value
 
-    def get_max(self, samples = 100):
+    def get_maximum(self, samples = 100):
         '''return argument and value for maximum'''
         x = np.linspace(0, 2.*np.pi, samples)
         y = self.get_values_at(x)
