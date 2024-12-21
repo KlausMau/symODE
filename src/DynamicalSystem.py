@@ -108,15 +108,13 @@ class DynamicalSystem:
 
         return fixed_points
 
-    def set_parameter_value(self, param_values) -> None:
-        # insert values into ODE
-        self._ode = self._ode.subs(param_values)
+    def set_parameter_value(self, parameter_values: dict) -> None:
+        '''fixes given parameter values in the system'''
+        for var in self._variables:
+            new_dynamical_equation = self._dynamical_equations[var].subs(parameter_values)
+            self._dynamical_equations.update({var: new_dynamical_equation})
 
-        # recheck for the parameters
-        self._parameters = list(set(self._ode.free_symbols)-set(self._variables))
-
-        # recompile integrator
-        self.compile_integrator()
+        self.set_attributes_from_dynamical_equations(compile_integrator=True)
 
     def add_term(self, target_variables, term) -> None:
         '''adds a term to the dynamical system'''
