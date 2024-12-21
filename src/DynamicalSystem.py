@@ -282,6 +282,7 @@ class DynamicalSystem:
         return f_odeint
 
     def compile_integrator(self, **kwargs) -> None:
+        '''compiles the integrator before it is used'''
         self._f_odeint = self.get_precompiled_integrator(**kwargs)
 
     def get_trajectories(self, t_span, state0 = None, parameter_values={}, max_step=0.01, **kwargs):
