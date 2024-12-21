@@ -152,7 +152,6 @@ class DynamicalSystem:
                     temp[i,j] = sy.Derivative(sy.Derivative(self._dynamical_equations[v], self._variables[j]),
                                               self._variables[i])
             self._hessian.append(temp)
-        return
 
     # return a new DynamicalSystem object
 
