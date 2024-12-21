@@ -11,6 +11,15 @@ import src.SystemsCatalogue as SystemsCatalogue
 
 rng = np.random.default_rng(12345)
 
+def get_dynamical_equations_from_catalogue(name: str, **params) -> dict:
+    '''returns a dynamical equations dictionary if "name" is found in the catalogue'''
+    if hasattr(SystemsCatalogue, name) is False:
+        print(f'{name} is not in the catalogue.')
+        return {}
+
+    dynamical_equations_builder = getattr(SystemsCatalogue, name)
+    return dynamical_equations_builder(**params)
+
 class DynamicalSystem:
     '''
     A class to deal with dynamical systems of the form
@@ -24,24 +33,26 @@ class DynamicalSystem:
     "set_X" can return an output, DO change the object
     '''
 
-    def __init__(self, autonomous, autocompile_integrator=True, **params) -> None:
+    def __init__(self, dynamical_equations: str | dict, **params) -> None:
         '''
-        set autonomous dynamics by "string" or "dictionary"
+        dynamical equations are given as "str" or "dict"
+        str:  looked up in the catalogue
+        dict: taken as is
+
+        The keys of the dictionary are taken as the dynamical variables.
+        All other symbols that appear in the values of the dictionary are interpreted as parameters.
         '''
-        if isinstance(autonomous, str):
-            # initialize by a special name
-            # search for function matching the name
-            try:
-                builder = getattr(SystemsCatalogue, autonomous)
-            except AttributeError:
-                print('Unknown name. Using "van_der_Pol" instead.')
-                builder = getattr(SystemsCatalogue, 'van_der_Pol')
+        if isinstance(dynamical_equations, str):
+            dynamical_equations = get_dynamical_equations_from_catalogue(dynamical_equations,
+                                                                         **params)
 
-            autonomous = builder(**params)
-        # keys -> dynamical variables (list introduces an order!)
-        self._variables = list(autonomous.keys())
+        self._dynamical_equations = dynamical_equations
+        self.set_attributes_from_dynamical_equations(compile_integrator=True)
 
-        # dimensionality
+
+    def set_attributes_from_dynamical_equations(self, compile_integrator=True) -> None:
+        '''sets the attributes of the dynamical system based on the dynamical equations'''
+        self._variables = self._dynamical_equations.keys()
         self._dimension = len(self._variables)
 
         # values -> ODEs (Sympy matrix, fixes the order of variables!)
