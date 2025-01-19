@@ -115,22 +115,14 @@ class DynamicalSystem:
 
         self._set_attributes_from_dynamical_equations()
 
-    def add_term(self, target_variables, term) -> None:
-        '''adds a term to the dynamical system'''
+    def add_term(self, target_variables: list[sy.Symbol], term: sy.Expr) -> None:
+        '''modifies the system by adding terms'''
 
-        for x in target_variables:
-            # find index of target variables
-            indeces = [i for i, variable in enumerate(self._variables) if variable == x]
-            idx = indeces[0]
-            # add to ODE
-            self._dynamical_equations[idx] += term
+        for target_var in target_variables:
+            old_equation = self._dynamical_equations[target_var]
+            self._dynamical_equations.update({target_var: sy.Add(old_equation, term)})
 
-        # add new parameters
-        new_parameters = list(set(term.free_symbols)-set(self._variables)-set(self._parameters))
-        self._parameters += new_parameters
-
-        # recompile integrator
-        self.compile_integrator()
+        self._set_attributes_from_dynamical_equations()
 
     def _calculate_jacobian(self) -> sy.Matrix:
         '''compute Jacobian matrix of system'''
