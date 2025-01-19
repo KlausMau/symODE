@@ -32,6 +32,8 @@ The used coding convention is PEP8.
 - new_coupled:
     - as default: if no specifications are given, impose mean field coupling in first variable with coupling parameter "epsilon"
 
+- compute Jacobian, Hessian and compiler only when needed
+
 ### Deployment
 
 - anaconda/pip package
