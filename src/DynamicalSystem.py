@@ -21,6 +21,10 @@ def get_dynamical_equations_from_catalogue(name: str, **params) -> dict:
     dynamical_equations_builder = getattr(SystemsCatalogue, name)
     return dynamical_equations_builder(**params)
 
+def get_symbols_with_index(symbols: list[sy.Symbol], index: int) -> dict[sy.Symbol, sy.Symbol]:
+    '''returns a mapping between symbolds and their indexed counterpart'''
+    return {symbol: sy.symbols(f'{symbol}_{index}') for symbol in symbols}
+
 class DynamicalSystem:
     '''
     A class to deal with dynamical systems of the form
@@ -77,13 +81,6 @@ class DynamicalSystem:
             ode_latex += rf'\dot {sy.latex(var)} = {sy.latex(self._dynamical_equations[var])} \\\\'
         ode_latex += '$'
         return ode_latex
-
-    def get_indexing_dict(self, index):
-        '''
-        returns a dictionary mapping the variables to an indexed version of themselves
-        '''
-        return dict(zip(self._variables, [sy.symbols(str(var) + '_' + str(index))
-                                          for var in self._variables]))
 
     # symbolic features
 
