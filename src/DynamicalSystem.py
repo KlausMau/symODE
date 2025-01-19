@@ -98,8 +98,8 @@ class DynamicalSystem:
         try:
             fixed_points = sy.solve(self._dynamical_equations, self._variables, dict=True)
         except NotImplementedError:
-            fixed_points = sy.nsolve(self._dynamical_equations, self._variables, np.zeros(self._dimension),
-                                     dict=True)
+            fixed_points = sy.nsolve(self._dynamical_equations, self._variables,
+                                     np.zeros(self._dimension), dict=True)
 
         if jacobian is True:
             for i, fp in enumerate(fixed_points):
@@ -302,8 +302,8 @@ class DynamicalSystem:
         if state0 is None:
             state0 = rng.standard_normal(size=self._dimension)
 
-        # create a properly ordered list from the dictionary "parameter_values"
-        parameter_list = [parameter_values[p] for p in self._parameters]
+        # ordered parameter values
+        parameter_values_list = [parameter_values[p] for p in self._parameters]
 
         # integrate with SciPy
         states = solve_ivp(self._f_odeint, t_span, state0,
@@ -522,7 +522,7 @@ class DynamicalSystem:
         '''infer phase-isostable structure for 2D system by backward integration'''
 
         # obtain limit cycle
-        time, y, extras = self.get_limit_cycle(params, event, isostable_expansion_order=1,
+        time, y, _ = self.get_limit_cycle(params, event, isostable_expansion_order=1,
                                          **kwargs_limit_cycle,
                                          #t_eq=250, state0=[1.,1.],
                                          #samples=samples,
@@ -537,7 +537,7 @@ class DynamicalSystem:
         t = time[-1]
         time_samples = [np.arange(0, t_max, t/samples) for t_max in t_max]
 
-        states = dict()
+        states = {}
 
         for z, sign in enumerate([-1,1]):
 
