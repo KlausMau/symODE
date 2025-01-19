@@ -161,7 +161,7 @@ class DynamicalSystem:
             new_dynamical_equations.update({var: -self._dynamical_equations[var]})
         return DynamicalSystem(new_dynamical_equations)
 
-    def new_transformed(self, new_variables, equations, **kwargs):
+    def get_new_system_after_transformation(self, new_variables, equations: dict[sy.Symbol, sy.Expr], **kwargs):
         '''
         expects list:
         new_variables = [x_new, y_new]
@@ -177,14 +177,19 @@ class DynamicalSystem:
         # invert Jacobian
         #try:, except
         jacobian_inv = jacobian.inv().doit()
-        ode_new = jacobian_inv*self._dynamical_equations.subs(equations)
+
+        substituted_dynamical_equations = {}
+        for var in self._variables:
+            substituted_dynamical_equations.update({var: self._dynamical_equations[var].subs(equations)})
+
+        ode_new = jacobian_inv*substituted_dynamical_equations
 
         # put into dictionary
-        ode_dict = {}
+        new_dynamical_equations = {}
         for i, x_new in enumerate(new_variables):
-            ode_dict[x_new] = ode_new[i].cancel()
+            new_dynamical_equations[x_new] = ode_new[i].cancel()
 
-        return DynamicalSystem(ode_dict, **kwargs)
+        return DynamicalSystem(new_dynamical_equations, **kwargs)
 
     def new_perturbed(self, order=1):
         ''' construct perturbed dynamical system up to order N
