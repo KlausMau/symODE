@@ -686,37 +686,38 @@ class DynamicalSystem:
             def isostable_from_x(x, y):
                 return np.matmul(np.array([d1, d2]),(np.array([x,y]) - fp_np))
 
+            def x_from_isostable_by_a1_a2(a1, a2):
+                ''' complex-conjugate eigenvalues
+
+                Parameters
+                ----------
+                a1 : float
+                    isostable coordinate a1
+
+                a2 : float
+                    isostable coordinate a2
+                '''
+
+                return fp_np + c1*a1 + c2*a2
+
+            def x_from_isostable_by_r_psi(r, psi):
+                ''' complex-conjugate eigenvalues
+
+                Parameters
+                ----------
+                r : float
+                    absolute value (non-negative)
+
+                psi : float
+                    complex argument (e.g. from 0 to 2*pi)
+                '''
+                #np.matmul(eigenvectors, a)
+                return fp_np + 2*r*np.real(c1*np.exp(1j*psi))
+
             if np.imag(eigenvalues[0]) == 0:
-                def x_from_isostable(a1, a2):
-                    ''' complex-conjugate eigenvalues
-
-                    Parameters
-                    ----------
-                    a1 : float
-                        isostable coordinate a1
-
-                    a2 : float
-                        isostable coordinate a2
-                    '''
-
-                    return fp_np + c1*a1 + c2*a2
-
+                output.append([eigenvalues, x_from_isostable_by_a1_a2, isostable_from_x])
             else:
-                def x_from_isostable(r, psi):
-                    ''' complex-conjugate eigenvalues
-
-                    Parameters
-                    ----------
-                    r : float
-                        absolute value (non-negative)
-
-                    psi : float
-                        complex argument (e.g. from 0 to 2*pi)
-                    '''
-                    #np.matmul(eigenvectors, a)
-                    return fp_np + 2*r*np.real(c1*np.exp(1j*psi))
-
-            output.append([eigenvalues, x_from_isostable, isostable_from_x])
+                output.append([eigenvalues, x_from_isostable_by_r_psi, isostable_from_x])
 
         return output
 
