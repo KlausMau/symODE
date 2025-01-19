@@ -34,7 +34,8 @@ class DynamicalSystem:
     "set_X" can return an output, DO change the object
     '''
 
-    def __init__(self, dynamical_equations: str | dict, **params) -> None:
+    def __init__(self, dynamical_equations: str | dict[sy.Symbol, sy.Expr],
+                 **params) -> None:
         '''
         dynamical equations are given as "str" or "dict"
         str:  looked up in the catalogue
