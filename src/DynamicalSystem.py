@@ -232,43 +232,43 @@ class DynamicalSystem:
 
         return DynamicalSystem(new_dynamical_equations)
 
-    def new_coupled(self, coupling_matrix = sy.ones(3,3),
-                    coupling_function = 'linear',
-                    non_identical_parameters=[]):
+    def get_new_system_with_coupling(self,
+                    coupling_function: dict[sy.Symbol, sy.Expr],
+                    coupling_matrix: sy.Matrix = sy.ones(3,3),
+                    non_identical_parameters=None):
         '''
+        x_i = F_i(x_i) - sum_{j=1}^{N} C_ij G(x_j)
         coupling_matrix:   square matrix with dimension N
         coupling function: string directing to a DynamicalSystem object
         (Sympy expressions with variables of unit system)
         '''
+        if non_identical_parameters is None:
+            non_identical_parameters = []
 
-        # number of units is given by the coupling matrix
-        n = len(np.array(coupling_matrix)[0])
-
-        # create DynamicalSystem for copuling function
-        coupling_function_system = DynamicalSystem(dynamical_equations=coupling_function,
-                                                   variables = self._variables)
+        number_of_units = len(np.array(coupling_matrix)[0])
 
         # write ODEs for new indexed variables
-        ode_new = {}
-        for i in range(n):
-            for var_index in range(self._dimension):
-                # copy autonomous ODE and substitute variables with index
-                ode_new_temp = self._dynamical_equations[var_index].subs(self.get_indexing_dict(i+1))
+        new_dynamical_equation = {}
+        for i in range(number_of_units):
+            indexed_symbols = get_symbols_with_index(self._variables, i+1)
+            indexed_parameters = get_symbols_with_index(non_identical_parameters, i+1)
 
-                # substitute nonidentical parameters with index
-                for parameter in non_identical_parameters:
-                    parameter_i = sy.symbols(str(parameter) + '_' + str(i+1))
-                    ode_new_temp = ode_new_temp.subs({parameter: parameter_i})
+            for var in self._variables:
+                # substitute variables with index
+                new_equation = sy.Expr(self._dynamical_equations[var].subs(indexed_symbols))
 
                 # add coupling terms
-                for j in range(n):
-                    term = coupling_function_system._dynamical_equations[var_index].subs(self.get_indexing_dict(j+1))
-                    ode_new_temp -= coupling_matrix[i,j]*term
+                for j in range(number_of_units):
+                    new_equation = sy.Add(new_equation,
+                                          -sy.Mul(coupling_matrix[i,j], coupling_function[var]))
+
+                # substitute nonidentical parameters with index
+                new_equation = sy.Expr(new_equation.subs(indexed_parameters))
 
                 # write into dictionary for new indexed variable
-                ode_new[sy.symbols(str(self._variables[var_index]) + '_' + str(i+1))] = ode_new_temp
+                new_dynamical_equation[indexed_symbols[var]] = new_equation
 
-        return DynamicalSystem(dynamical_equations=ode_new)
+        return DynamicalSystem(new_dynamical_equation)
 
     # numerical features
 
