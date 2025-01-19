@@ -1,12 +1,13 @@
 import copy
 import itertools
 import numpy as np
-import scipy as sc
 import sympy as sy
 import numba as nb
 from IPython.core.display import display, Math
 
-from scipy import integrate
+from scipy.integrate import solve_ivp, trapezoid, cumulative_trapezoid
+from sympy.utilities import lambdify
+
 import src.SystemsCatalogue as SystemsCatalogue
 
 rng = np.random.default_rng(12345)
@@ -277,7 +278,7 @@ class DynamicalSystem:
         '''
 
         # get numba-precompiled functions (maximum number of arguments is 255 ...)
-        f_auto = nb.jit(sy.utilities.lambdify(tuple(self._variables + self._parameters),
+        f_auto = nb.jit(lambdify(tuple(self._variables + self._parameters),
                                               tuple(self._dynamical_equations), cse=True),
                                               nopython=True)
 
@@ -308,9 +309,9 @@ class DynamicalSystem:
         # create a properly ordered list from the dictionary "parameter_values"
         parameter_list = [parameter_values[p] for p in self._parameters]
 
-        # integrate
-        states = sc.integrate.solve_ivp(self._f_odeint, t_span, state0,
-                                        args=(parameter_list, ), max_step=max_step, **kwargs)
+        # integrate with SciPy
+        states = solve_ivp(self._f_odeint, t_span, state0,
+                           args=(parameter_values_list, ), max_step=max_step, **kwargs)
 
         return states
 
@@ -436,8 +437,8 @@ class DynamicalSystem:
 
             ### calculate Jacobian at limit cycle ###
 
-            self.calculate_jacobian()
-            j_np = sy.utilities.lambdify(tuple(self._variables), self._jacobian.doit().subs(params),
+            self._calculate_jacobian()
+            j_np = lambdify(tuple(self._variables), self._jacobian.doit().subs(params),
                                          cse=True)
 
             j = np.zeros((self._dimension, self._dimension, samples))
@@ -478,7 +479,7 @@ class DynamicalSystem:
             non_unity_eigenvec = eigenvecs.transpose()[np.abs(eigenvals-1) > 1e-4][0]
 
             # this is numerical unstable for large |kappa|, consider changing to trace formula
-            kappa_trace = integrate.trapezoid(np.trace(j, axis1=0, axis2=1), time)/t
+            kappa_trace = trapezoid(np.trace(j, axis1=0, axis2=1), time)/t
             kappa_monod = np.log(np.min(eigenvals))/t
 
             ### EXTRA 2 & 3 ###
@@ -722,9 +723,8 @@ class DynamicalSystem:
         #'''this function calculates the angular frequency and the Floquet exponent
         # of a 2D limit cycle system'''
 
-        self.calculate_jacobian()
-        j_np = sy.utilities.lambdify(tuple(self._variables), self._jacobian.doit().subs(params),
-                                     cse=True)
+        self._calculate_jacobian()
+        j_np = lambdify(tuple(self._variables), self._jacobian.doit().subs(params), cse=True)
 
         sol = self.get_trajectories(parameter_values=params, **kwargs)
 
@@ -733,7 +733,7 @@ class DynamicalSystem:
         for i in range(self._dimension):
             for j in range(self._dimension):
                 j_ij_at_lc = [j_np(sol.y[0,t], sol.y[1,t])[i,j] for t in range(len(sol.t))]
-                j_int[i,j] = integrate.cumulative_trapezoid(j_ij_at_lc, sol.t,
+                j_int[i,j] = cumulative_trapezoid(j_ij_at_lc, sol.t,
                                                             initial=0)/(sol.t[-1]-sol.t[0])
 
         return j_int
