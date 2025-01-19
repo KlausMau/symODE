@@ -49,22 +49,20 @@ class DynamicalSystem:
                                                                          **params)
 
         self._dynamical_equations = dynamical_equations
-        self.set_attributes_from_dynamical_equations(compile_integrator=True)
+        self._set_attributes_from_dynamical_equations()
 
 
-    def set_attributes_from_dynamical_equations(self, compile_integrator=True) -> None:
+    def _set_attributes_from_dynamical_equations(self) -> None:
         '''sets the attributes of the dynamical system based on the dynamical equations'''
-        self._variables = self._dynamical_equations.keys()
+        self._variables = list(self._dynamical_equations.keys())
         self._dimension = len(self._variables)
 
         all_symbols = sy.Matrix(list(self._dynamical_equations.values())).free_symbols
         self._parameters = list(set(all_symbols)-set(self._variables))
 
-        self._jacobian = sy.Matrix()
-        self._hessian : list[sy.Matrix] = []
-
-        if compile_integrator is True:
-            self.compile_integrator()
+        self._jacobian = self._calculate_jacobian()
+        self._hessian = self._calculate_hessian()
+        self._f_odeint = self._compile_integrator()
 
     # convenience features
 
@@ -104,7 +102,6 @@ class DynamicalSystem:
                                      dict=True)
 
         if jacobian is True:
-            self.calculate_jacobian()
             for i, fp in enumerate(fixed_points):
                 fixed_points[i].update({'Jacobian' : self._jacobian.doit().subs(fp)})
 
@@ -135,25 +132,27 @@ class DynamicalSystem:
         # recompile integrator
         self.compile_integrator()
 
-    def calculate_jacobian(self) -> None:
-        '''compute Jacobian of system'''
-        self._jacobian = sy.ones(self._dimension)
+    def _calculate_jacobian(self) -> sy.Matrix:
+        '''compute Jacobian matrix of system'''
+        jacobian = sy.ones(self._dimension)
         for i, j in itertools.product(range(self._dimension), range(self._dimension)):
             var_i = self._variables[i]
             var_j = self._variables[j]
-            self._jacobian[i,j] = sy.Derivative(self._dynamical_equations[var_i], var_j)
+            jacobian[i,j] = sy.Derivative(self._dynamical_equations[var_i], var_j)
+        return jacobian
 
-    def calculate_hessian(self) -> None:
+    def _calculate_hessian(self) -> list[sy.Matrix]:
         '''compute Hessian tensor of system'''
-        n = self._dimension
-        self._hessian = []
-        for v in range(len(self._variables)):
-            temp = sy.ones(n)
-            for i in range(n):
-                for j in range(n):
-                    temp[i,j] = sy.Derivative(sy.Derivative(self._dynamical_equations[v], self._variables[j]),
-                                              self._variables[i])
-            self._hessian.append(temp)
+        hessian = []
+        for variable in self._variables:
+            temp = sy.ones(self._dimension)
+            for i, j in itertools.product(range(self._dimension), range(self._dimension)):
+                var_i = self._variables[i]
+                var_j = self._variables[j]
+                temp[i,j] = sy.Derivative(sy.Derivative(self._dynamical_equations[variable], var_j),
+                                          var_i)
+            hessian.append(temp)
+        return hessian
 
     # return a new DynamicalSystem object
 
@@ -267,7 +266,7 @@ class DynamicalSystem:
 
     # numerical features
 
-    def get_precompiled_integrator(self):
+    def _compile_integrator(self):
         '''
         compiles the integrator and returns a function with the
         signature to fit into "scipy.integrate.solve_ivp"
@@ -290,11 +289,7 @@ class DynamicalSystem:
 
         return f_odeint
 
-    def compile_integrator(self, **kwargs) -> None:
-        '''compiles the integrator before it is used'''
-        self._f_odeint = self.get_precompiled_integrator(**kwargs)
-
-    def get_trajectories(self, t_span, state0 = None, parameter_values={}, max_step=0.01, **kwargs):
+    def get_trajectories(self, t_span, state0, parameter_values, max_step=0.01, **kwargs):
         '''
         Return the trajectories of the dynamical system using "scipy.integrate.solve_ivp".
 
@@ -608,7 +603,6 @@ class DynamicalSystem:
         #x0 = [self.VARIABLES[i].subs(fp) for i in range(self.Dim)
 
         # compute Jacobian at fixed point "fp[0]"
-        self.calculate_jacobian()
         df = self._jacobian.doit().subs(fp[0]).subs(params)
         print(df)
         df_np = np.array(df).astype(np.float64)
@@ -652,9 +646,6 @@ class DynamicalSystem:
 
         # new DynamicalSystem with fixed parameters
         system = self.get_new_system_with_fixed_parameters(params)
-
-        # compute Jacobian
-        system.calculate_jacobian()
 
         # compute fixed points
         fixed_points = system.get_fixed_points()
