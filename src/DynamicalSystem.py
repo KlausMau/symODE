@@ -191,37 +191,46 @@ class DynamicalSystem:
 
         return DynamicalSystem(new_dynamical_equations, **kwargs)
 
-    def new_perturbed(self, order=1):
+    def get_new_system_with_perturbation_variables(self, order: int =1):
         ''' construct perturbed dynamical system up to order N
         (0) dot x = F(x)
         (1) dot d_1 = J_F(x)*d_1
         (2) dot d_2 = J_F(x)*d_2 + H(x, d_1)
         '''
-        n = self._dimension
+
+        new_dynamical_equations = {}
 
         # terms of order "0"
-        ode_pert = {}
-        for i in range(n):
-            ode_pert.update({self._variables[i]: self._dynamical_equations[i]})
+        if order < 0:
+            return DynamicalSystem(new_dynamical_equations)
 
-        # terms of order "1"
-        self.calculate_jacobian()
-        d1 = sy.Matrix([sy.symbols(f'd_1{x}') for x in self._variables])
-        j_d1 = self._jacobian.doit()*d1
+        new_dynamical_equations = self._dynamical_equations
 
-        for i in range(n):
-            ode_pert.update({d1[i]: j_d1[i]})
+        if order < 1:
+            return DynamicalSystem(new_dynamical_equations)
 
-        # terms of order "2"
-        if order == 2:
-            self.calculate_hessian()
-            d2 = sy.Matrix([sy.symbols(f'd_2{x}') for x in self._variables])
-            j_d2 = self._jacobian.doit()*d2
-            for i in range(n):
-                c = sy.transpose(d1)*self._hessian[i].doit()*d1
-                ode_pert.update({d2[i]: j_d2[i] + c[0]})
+        # add terms of order "1"
+        self._calculate_jacobian()
+        perturbation_vars_order_1 = [sy.symbols(f'd_1{var}') for var in self._variables]
+        for i in range(self._dimension):
+            perturbation_equation = sum(self._jacobian.doit()[i,j]*perturbation_vars_order_1[j]
+                                         for j in range(self._dimension))
+            new_dynamical_equations.update({perturbation_vars_order_1[i]: perturbation_equation})
 
-        return DynamicalSystem(dynamical_equations = ode_pert)
+        if order < 2:
+            return DynamicalSystem(new_dynamical_equations)
+
+        # add terms of order "2"
+        self._calculate_hessian()
+        perturbation_vars_order_2 = [sy.symbols(f'd_2{var}') for var in self._variables]
+        for i in range(self._dimension):
+            jacobian_matrix_product = sum(self._jacobian.doit()[i,j]*perturbation_vars_order_2[j]
+                                         for j in range(self._dimension))
+            offset = sy.transpose(perturbation_vars_order_1)*self._hessian[i].doit()*perturbation_vars_order_1
+            new_dynamical_equations.update({perturbation_vars_order_2[i]:
+                                            jacobian_matrix_product + offset[0]})
+
+        return DynamicalSystem(new_dynamical_equations)
 
     def new_coupled(self, coupling_matrix = sy.ones(3,3),
                     coupling_function = 'linear',
