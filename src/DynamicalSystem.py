@@ -107,13 +107,13 @@ class DynamicalSystem:
 
         return fixed_points
 
-    def set_parameter_value(self, parameter_values: dict) -> None:
-        '''fixes given parameter values in the system'''
+    def set_parameter_value(self, parameter_values: dict[sy.Symbol, sy.Expr]) -> None:
+        '''modifies the system by replacing parameters'''
         for var in self._variables:
-            new_dynamical_equation = self._dynamical_equations[var].subs(parameter_values)
+            new_dynamical_equation = sy.Expr(self._dynamical_equations[var].subs(parameter_values))
             self._dynamical_equations.update({var: new_dynamical_equation})
 
-        self.set_attributes_from_dynamical_equations(compile_integrator=True)
+        self._set_attributes_from_dynamical_equations()
 
     def add_term(self, target_variables, term) -> None:
         '''adds a term to the dynamical system'''
