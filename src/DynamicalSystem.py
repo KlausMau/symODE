@@ -453,7 +453,7 @@ class DynamicalSystem:
 
             ### calculate fundamental solution matrix ###
 
-            system_o1 = self.new_perturbed(order=1)
+            system_o1 = self.get_new_system_with_perturbation_variables(order=1)
 
             fund_matrix = np.zeros((self._dimension, self._dimension, len(time)))
             fund_matrix[:,:,0] = np.eye(self._dimension)
@@ -496,7 +496,7 @@ class DynamicalSystem:
 
                 ### calculate special solution for d2 ###
 
-                system_o2 = self.new_perturbed(order=2)
+                system_o2 = self.get_new_system_with_perturbation_variables(order=2)
 
                 state0 = np.zeros(3*self._dimension)
                 state0[:self._dimension] = y[0,:,0]
