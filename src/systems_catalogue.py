@@ -166,9 +166,9 @@ def coupled_oscillators_isostable():
 def coupled_phase_oscillators_harmonics():
     '''coupled phase oscillators with higher harmonics (2D)'''
     phi_1, phi_2 = sy.symbols('phi_1 phi_2')
-    omega_1, omega_2, epsilon, sigma, beta, i_ext = sy.symbols('omega_1 omega_2 epsilon sigma beta I_ext')
+    omega_1, omega_2, epsilon, sigma, beta = sy.symbols('omega_1 omega_2 epsilon sigma beta')
 
-    return {phi_1: omega_1 + epsilon*sy.sin(phi_2-phi_1) + sigma*sy.sin(2*(phi_2-phi_1)) + i_ext*sy.sin(phi_1),
+    return {phi_1: omega_1 + epsilon*sy.sin(phi_2-phi_1) + sigma*sy.sin(2*(phi_2-phi_1)),
             phi_2: omega_2 + epsilon*sy.sin(phi_1-phi_2) + beta*sy.sin(3*(phi_1-phi_2))}
 
 def linear_2d(variables=[sy.symbols('x'), sy.symbols('y')]):
