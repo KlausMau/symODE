@@ -122,12 +122,11 @@ def infinity_oscillator():
     x, y = sy.symbols('x y')
     omega, kappa, r, alpha = sy.symbols('omega kappa r alpha')
 
-    # functions
-    C = -2*x*y/((r+2)*x**2 + r*y**2)
-    D = (x**2+y**2)**2/((r+2)*x**2 + r*y**2)
+    aux_c = -2*x*y/((r+2)*x**2 + r*y**2)
+    aux_d = (x**2+y**2)**2/((r+2)*x**2 + r*y**2)
 
-    return {x: omega*(x*C-y) + kappa/2*(D-1)*(x+alpha*(x*C-y)),
-            y: omega*(y*C+x) + kappa/2*(D-1)*(y+alpha*(y*C+x))}
+    return {x: omega*(x*aux_c-y) + kappa/2*(aux_d-1)*(x+alpha*(x*aux_c-y)),
+            y: omega*(y*aux_c+x) + kappa/2*(aux_d-1)*(y+alpha*(y*aux_c+x))}
 
 def isostable_2d():
     '''isostable system (2D)'''
