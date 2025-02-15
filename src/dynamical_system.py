@@ -14,8 +14,6 @@ from scipy.integrate import solve_ivp, trapezoid, cumulative_trapezoid
 from sympy.utilities import lambdify
 from src import systems_catalogue
 
-rng = np.random.default_rng(12345)
-
 def get_dynamical_equations_from_catalogue(name: str, **params) -> dict:
     '''returns a dynamical equations dictionary if "name" is found in the catalogue'''
     if hasattr(systems_catalogue, name) is False:
@@ -313,9 +311,6 @@ class DynamicalSystem:
         if the choice of "max_step" is left to "solve_ivp"
 
         '''
-        # if no state is given, choose randomly
-        if state0 is None:
-            state0 = rng.standard_normal(size=self._dimension)
 
         # ordered parameter values
         parameter_values_list = [parameter_values[p] for p in self._parameters]
