@@ -108,13 +108,6 @@ def homoclinic():
     return {x: mu1*x + y,
             y: (mu2-mu1)*y + x**2 - x*y}
 
-def sin_cos_LC():
-    # should be replaced by transformations soon
-    x, y = sy.symbols('x y')
-
-    return {x: y - sy.sin(y)*x/2,
-            y: -x + sy.cos(x)*y/2}
-
 def infinity_oscillator():
     x, y = sy.symbols('x y')
     omega, kappa, r, alpha = sy.symbols('omega kappa r alpha')
