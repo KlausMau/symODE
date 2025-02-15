@@ -404,18 +404,14 @@ class DynamicalSystem:
         y:          limit cycle expansion;
                     y[0] is the limit cycle
                     y[1], y[2]
-        extra[0]:   Jacobian
-        extra[1]:   fundamental matrix
-        extra[2]:   kappa_trace
-        extra[3]:   kappa_monod
-        extra[4]:   d2_special
+        extras:     additional information
         '''
         event.terminal = False
+        extras = {}
 
         # get to equilibrium
         sol_eq = self.get_trajectories((0., t_eq), state0, params,
-                                       t_eval = [t_eq], events=event,
-                                       **kwargs)
+                                       t_eval = [t_eq], events=event, **kwargs)
 
         # integrate from last event one period
         #for i in range(1, len(sol_eq.t_events[0])):
@@ -428,8 +424,7 @@ class DynamicalSystem:
         sampled_period = np.linspace(0, period, samples)
 
         sol_lc  = self.get_trajectories((0., period), sol_eq.y_events[0][-1], params,
-                                        t_eval = sampled_period,
-                                        **kwargs)
+                                        t_eval = sampled_period, **kwargs)
 
         # prepare return array
         y = np.zeros((isostable_expansion_order+1, 2, samples))
@@ -437,8 +432,7 @@ class DynamicalSystem:
         # grab limit-cycle orbit
         y[0] = sol_lc.y
 
-        extras = []
-        if isostable_expansion_order==0:
+        if isostable_expansion_order==0 or self._dimension != 2:
             return sampled_period, y, extras
 
         ### calculate Jacobian at limit cycle ###
@@ -451,8 +445,7 @@ class DynamicalSystem:
         for period in range(samples):
             j[:,:,period] = j_np(*y[0,:,period])
 
-        ### EXTRA 0 ### --> "extra" to dictionary
-        extras.append(j)
+        extras.update({"jacobian": j})
 
         ### calculate fundamental solution matrix ###
 
@@ -475,8 +468,7 @@ class DynamicalSystem:
 
             fund_matrix[:,n,:] = sol.y[self._dimension:,:]
 
-        ### EXTRA 1 ###
-        extras.append(fund_matrix)
+        extras.update({"fundamental_matrix": fund_matrix})
 
         # eigenvalues/-vectors of monodromy matrix (this is for N=2 only!!)
         # this selection process has to be revisited!
@@ -487,9 +479,8 @@ class DynamicalSystem:
         kappa_trace = trapezoid(np.trace(j, axis1=0, axis2=1), sampled_period)/period
         kappa_monod = np.log(np.min(eigenvals))/period
 
-        ### EXTRA 2 & 3 ###
-        extras.append(kappa_trace)
-        extras.append(kappa_monod)
+        extras.update({"floquet_exponent_by_trace": kappa_trace})
+        extras.update({"floquet_exponent_by_monodromy_matrix": kappa_monod})
 
         y[1] = np.array([np.exp(-kappa_trace*sampled_period[t])*np.matmul(fund_matrix[:,:,t], non_unity_eigenvec) for t in range(len(sampled_period))]).transpose()
         #y[1] = np.array([np.power(np.min(w),-Time[t]/Time[-1])*np.matmul(fund_matrix[:,:,t],
@@ -516,8 +507,7 @@ class DynamicalSystem:
         y2_data_ini = np.matmul(np.linalg.inv(np.exp(2.*kappa_trace*sampled_period[-1])*np.eye(2)-fund_matrix[:,:,-1]), d2_special[:,-1])
         y[2] = np.array([np.exp(-2.*kappa_trace*sampled_period[t])*(np.matmul(fund_matrix[:,:,t], y2_data_ini[:]) + d2_special[:,t]) for t in range(len(sampled_period))]).transpose()
 
-        ### EXTRA 4 ###
-        extras.append(d2_special)
+        extras.update({"d2_special": d2_special})
 
         if show_results is True:
             print(f'period = {period}')
