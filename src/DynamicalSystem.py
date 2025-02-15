@@ -723,21 +723,22 @@ class DynamicalSystem:
 
         return output
 
-    def get_time_averaged_jacobian(self, params, **kwargs):
-        #'''this function calculates the angular frequency and the Floquet exponent
-        # of a 2D limit cycle system'''
+    def get_time_averaged_jacobian(self, t_span, state0,
+                                   parameter_values: dict[sy.Symbol | sy.Expr], **kwargs):
+        '''returns the time-averaged Jacobian matrix of the system'''
 
-        self._calculate_jacobian()
-        j_np = lambdify(tuple(self._variables), self._jacobian.doit().subs(params), cse=True)
+        lambidified_jacobian = lambdify(tuple(self._variables),
+                                        self._jacobian.doit().subs(parameter_values), cse=True)
 
-        sol = self.get_trajectories(parameter_values=params, **kwargs)
+        trajectory = self.get_trajectories(t_span, state0, parameter_values, **kwargs)
 
-        j_int = np.zeros((self._dimension, self._dimension, len(sol.t)))
+        time_averaged_jacobian = np.zeros((self._dimension, self._dimension, len(trajectory.t)))
 
-        for i in range(self._dimension):
-            for j in range(self._dimension):
-                j_ij_at_lc = [j_np(sol.y[0,t], sol.y[1,t])[i,j] for t in range(len(sol.t))]
-                j_int[i,j] = cumulative_trapezoid(j_ij_at_lc, sol.t,
-                                                            initial=0)/(sol.t[-1]-sol.t[0])
+        for i, j in itertools.product(range(self._dimension), range(self._dimension)):
+            matrix_entry_trajectory = [lambidified_jacobian(*trajectory.y[:,t])[i,j]
+                            for t in range(len(trajectory.t))]
+            time_averaged_jacobian[i,j] = cumulative_trapezoid(matrix_entry_trajectory,
+                                                               trajectory.t,
+                                                               initial=0)/(trajectory.t[-1]-trajectory.t[0])
 
-        return j_int
+        return time_averaged_jacobian
