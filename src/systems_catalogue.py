@@ -7,7 +7,7 @@ import sympy as sy
 # arbitrary dimension #
 
 def linear(variables=[sy.symbols('x')], param_name = 'a'):
-    # "variables" is a list of Sympy symbols
+    '''linear system of arbitrary dimension ("variables" is a list of Sympy symbols)'''
     ODE = {}
     for i in range(len(variables)):
         f_i = 0
@@ -17,6 +17,7 @@ def linear(variables=[sy.symbols('x')], param_name = 'a'):
     return  ODE
 
 def Kuramoto(number_of_oscillators=2):
+    '''Kuramoto system of arbitrary dimension'''
     phi = sy.symbols('phi')
     omega, epsilon = sy.symbols('omega epsilon')
 
@@ -38,18 +39,21 @@ def Kuramoto(number_of_oscillators=2):
 # 1D #
 
 def Adler():
+    '''Adler equation (1D)'''
     delta = sy.symbols('Delta')
     eta, epsilon = sy.symbols('eta epsilon')
 
     return  {delta: eta + epsilon*sy.sin(delta)}
 
 def linear_1D():
+    '''linear system (1D)'''
     x= sy.symbols('x')
     kappa = sy.symbols('kappa')
 
     return  {x: kappa*x}
 
 def constant():
+    '''constant system (1D)'''
     x = sy.symbols('x')
 
     return {x: 1}
@@ -57,6 +61,7 @@ def constant():
 # 2D #
 
 def Stuart_Landau():
+    '''Stuart-Landau model (2D)'''
     x, y = sy.symbols('x y')
     mu, omega, alpha = sy.symbols('mu omega alpha')
 
@@ -64,6 +69,7 @@ def Stuart_Landau():
             y: mu*y + omega*x - (x**2+y**2)*(y+alpha*x)}
 
 def van_der_Pol():
+    '''van der Pol model (2D)'''
     x, y = sy.symbols('x y')
     epsilon = sy.symbols('epsilon')
 
@@ -71,7 +77,8 @@ def van_der_Pol():
             y: -x + epsilon*(1-x**2)*y}
 
 def van_der_Pol_Lienard():
-    # should be replaced by transformations soon
+    '''van der Pol model after Lienard transformation (2D);
+    should be replaced by transformations soon'''
     x, y = sy.symbols('x y')
     epsilon = sy.symbols('epsilon')
 
@@ -79,7 +86,7 @@ def van_der_Pol_Lienard():
             y: x}
 
 def FitzHugh_Nagumo():
-    '''FitzHugh-Nagumo model (https://doi.org/10.1016/S0006-3495(61)86902-6)'''
+    '''FitzHugh-Nagumo model (2D) (https://doi.org/10.1016/S0006-3495(61)86902-6)'''
     x, y = sy.symbols('x y', real=True)
     a, b, i, tau = sy.symbols('a b I tau')
 
@@ -87,6 +94,7 @@ def FitzHugh_Nagumo():
             y: (x + a - b*y)/tau}
 
 def harmonic_oscillator():
+    '''harmonic oscillator (2D)'''
     x, y = sy.symbols('x y')
     gamma, omega = sy.symbols('gamma omega')
 
@@ -94,7 +102,7 @@ def harmonic_oscillator():
             y: -2*gamma*omega*y - omega**2*x}
 
 def rayleigh():
-    '''Rayleigh oscillator (www.google.com)'''
+    '''Rayleigh oscillator (2D)'''
     x, y = sy.symbols('x y')
     mu, omega = sy.symbols('mu omega')
 
@@ -102,6 +110,7 @@ def rayleigh():
             y: mu*(1-y**2)*y - omega*omega*x}
 
 def homoclinic():
+    '''homoclinic system (2D); find better name'''
     x, y = sy.symbols('x y')
     mu1, mu2 = sy.symbols('mu_1 mu_2')
 
@@ -109,6 +118,7 @@ def homoclinic():
             y: (mu2-mu1)*y + x**2 - x*y}
 
 def infinity_oscillator():
+    '''infinity oscillator (2D)'''
     x, y = sy.symbols('x y')
     omega, kappa, r, alpha = sy.symbols('omega kappa r alpha')
 
@@ -120,6 +130,7 @@ def infinity_oscillator():
             y: omega*(y*C+x) + kappa/2*(D-1)*(y+alpha*(y*C+x))}
 
 def isostable_2D():
+    '''isostable system (2D)'''
     phi, psi = sy.symbols('phi psi')
     omega, kappa = sy.symbols('omega kappa')
 
@@ -127,6 +138,7 @@ def isostable_2D():
             psi: kappa*psi}
 
 def coupled_phase_oscillators():
+    '''coupled phase oscillators (2D)'''
     phi_1, phi_2 = sy.symbols('phi_1 phi_2')
     omega_1, omega_2, epsilon, alpha, i_ext = sy.symbols('omega_1 omega_2 epsilon alpha I_ext')
 
@@ -134,7 +146,7 @@ def coupled_phase_oscillators():
             phi_2: omega_2 + epsilon*sy.sin(phi_2-phi_1+alpha)}
 
 def coupled_oscillators_isostable():
-    # not needed anymore #
+    '''coupled oscillators after phase-isostable transformation (2D); still needed?'''
     phi, psi = sy.symbols('varphi psi')
     w, eta, eps, i_ext = sy.symbols('Omega eta epsilon I_ext')
 
@@ -152,6 +164,7 @@ def coupled_oscillators_isostable():
             psi: -2*eps*sy.sqrt(1-c**2)*psi - i_ext*d_psi*Z(phi_2)}
 
 def coupled_phase_oscillators_harmonics():
+    '''coupled phase oscillators with higher harmonics (2D)'''
     phi_1, phi_2 = sy.symbols('phi_1 phi_2')
     omega_1, omega_2, epsilon, sigma, beta, i_ext = sy.symbols('omega_1 omega_2 epsilon sigma beta I_ext')
 
@@ -159,7 +172,7 @@ def coupled_phase_oscillators_harmonics():
             phi_2: omega_2 + epsilon*sy.sin(phi_1-phi_2) + beta*sy.sin(3*(phi_1-phi_2))}
 
 def linear_2D(variables=[sy.symbols('x'), sy.symbols('y')]):
-    ''' "variables" is a list of Sympy symbols '''
+    '''linear system (2D); variables is a list of Sympy symbols'''
     x = variables[0]
     y = variables[1]
     c = sy.symbols('c')
@@ -168,6 +181,7 @@ def linear_2D(variables=[sy.symbols('x'), sy.symbols('y')]):
              y: c*x + y}
 
 def oscillator_Rok():
+    '''Roks oscillator (2D)'''
     x, y = sy.symbols('x y')
     a, b = sy.symbols('a b')
 
@@ -177,6 +191,7 @@ def oscillator_Rok():
 # 3D #
 
 def Lorenz():
+    '''Lorenz system (3D)'''
     x, y, z = sy.symbols('x y z')
     sigma, rho, beta = sy.symbols('sigma rho beta')
 
@@ -185,6 +200,7 @@ def Lorenz():
             z: x * y - beta * z }
 
 def Thomas():
+    '''Thomas system (3D)'''
     x, y, z = sy.symbols('x y z')
     b = sy.symbols('b')
 
@@ -193,6 +209,7 @@ def Thomas():
             z: sy.sin(x) - b*z}
 
 def Roessler():
+    '''Roessler system (3D)'''
     x, y, z = sy.symbols('x y z')
     a, b, c = sy.symbols('a b c')
 
@@ -201,6 +218,7 @@ def Roessler():
             z: b+z*(x-c)}
 
 def Hindmarsh_Rose():
+    '''Hindmarsh-Rose system (3D)'''
     x, y, z = sy.symbols('x y z')
     a, b, c, d, r, s, i, x_r = sy.symbols('a b c d r s I x_R')
 
@@ -209,6 +227,7 @@ def Hindmarsh_Rose():
             z: r*(s*(x-x_r)-z)}
 
 def isostable_3D():
+    '''isostable system (3D)'''
     phi, psi_1, psi_2 = sy.symbols('phi psi_1 psi_2')
     omega, kappa_1, kappa_2 = sy.symbols('omega kappa_1 kappa_2')
 
