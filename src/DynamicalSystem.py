@@ -12,18 +12,17 @@ from IPython.core.display import display, Math
 
 from scipy.integrate import solve_ivp, trapezoid, cumulative_trapezoid
 from sympy.utilities import lambdify
-
-import src.SystemsCatalogue as SystemsCatalogue
+from src import systems_catalogue
 
 rng = np.random.default_rng(12345)
 
 def get_dynamical_equations_from_catalogue(name: str, **params) -> dict:
     '''returns a dynamical equations dictionary if "name" is found in the catalogue'''
-    if hasattr(SystemsCatalogue, name) is False:
+    if hasattr(systems_catalogue, name) is False:
         print(f'{name} is not in the catalogue.')
         return {}
 
-    dynamical_equations_builder = getattr(SystemsCatalogue, name)
+    dynamical_equations_builder = getattr(systems_catalogue, name)
     return dynamical_equations_builder(**params)
 
 def get_symbols_with_index(symbols: list[sy.Symbol], index: int) -> dict[sy.Symbol, sy.Symbol]:
