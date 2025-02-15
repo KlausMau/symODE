@@ -8,20 +8,20 @@ import sympy as sy
 
 def linear(variables=[sy.symbols('x')], param_name = 'a'):
     '''linear system of arbitrary dimension ("variables" is a list of Sympy symbols)'''
-    ODE = {}
+    dynamical_equations = {}
     for i in range(len(variables)):
         f_i = 0
         for j in range(len(variables)):
             f_i += sy.symbols(param_name + '_' + str(variables[i]) + '_' + str(variables[j]))*variables[j]
-        ODE.update({variables[i]: f_i})
-    return  ODE
+        dynamical_equations.update({variables[i]: f_i})
+    return  dynamical_equations
 
 def kuramoto(number_of_oscillators=2):
     '''Kuramoto system of arbitrary dimension'''
     phi = sy.symbols('phi')
     omega, epsilon = sy.symbols('omega epsilon')
 
-    ODE = {}
+    dynamical_equations = {}
     for i in range(number_of_oscillators):
         phi_i = sy.symbols(str(phi) + '_' + str(i+1))
         om_i  = sy.symbols(str(omega)  + '_' + str(i+1))
@@ -33,8 +33,8 @@ def kuramoto(number_of_oscillators=2):
             coupling_term += sy.sin(phi_j-phi_i)
         coupling_term *= epsilon/number_of_oscillators
 
-        ODE.update({phi_i: om_i + coupling_term})
-    return ODE
+        dynamical_equations.update({phi_i: om_i + coupling_term})
+    return dynamical_equations
 
 # 1D #
 
