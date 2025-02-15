@@ -295,8 +295,8 @@ class DynamicalSystem:
 
         # get numba-precompiled functions (maximum number of arguments is 255 ...)
         f_auto = nb.jit(lambdify(tuple(self._variables + self._parameters),
-                                              tuple(self._dynamical_equations), cse=True),
-                                              nopython=True)
+                                 tuple(self._dynamical_equations.values()), cse=True),
+                                 nopython=True)
 
         def f_odeint(t, state, parameters):
             # combine "state" and "parameters" to new "arguments" list variable
