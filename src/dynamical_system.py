@@ -421,16 +421,14 @@ class DynamicalSystem:
         #for i in range(1, len(sol_eq.t_events[0])):
         #    print(sol_eq.t_events[0][i]-sol_eq.t_events[0][i-1])
 
-        # period
-        t = sol_eq.t_events[0][-1]-sol_eq.t_events[0][-2]
 
-        # frequency
-        omega = 2*np.pi/t
+        period = sol_eq.t_events[0][-1]-sol_eq.t_events[0][-2]
+        circular_frequency = 2*np.pi/period
 
-        time = np.linspace(0, t, samples)
+        sampled_period = np.linspace(0, period, samples)
 
-        sol_lc  = self.get_trajectories((0., t), sol_eq.y_events[0][-1], params,
-                                        t_eval = time,
+        sol_lc  = self.get_trajectories((0., period), sol_eq.y_events[0][-1], params,
+                                        t_eval = sampled_period,
                                         **kwargs)
 
         # prepare return array
@@ -450,8 +448,8 @@ class DynamicalSystem:
 
             j = np.zeros((self._dimension, self._dimension, samples))
 
-            for t in range(samples):
-                j[:,:,t] = j_np(*y[0,:,t])
+            for period in range(samples):
+                j[:,:,period] = j_np(*y[0,:,period])
 
             ### EXTRA 0 ### --> "extra" to dictionary
             extras.append(j)
@@ -460,7 +458,7 @@ class DynamicalSystem:
 
             system_o1 = self.get_new_system_with_perturbation_variables(order=1)
 
-            fund_matrix = np.zeros((self._dimension, self._dimension, len(time)))
+            fund_matrix = np.zeros((self._dimension, self._dimension, len(sampled_period)))
             fund_matrix[:,:,0] = np.eye(self._dimension)
 
             for n in range(self._dimension):
@@ -469,8 +467,8 @@ class DynamicalSystem:
                 state0[:self._dimension] = y[0,:,0]
                 state0[self._dimension + n] = 1.
 
-                sol = system_o1.get_trajectories(t_span=(0,time[-1]),
-                                                t_eval=time,
+                sol = system_o1.get_trajectories(t_span=(0,sampled_period[-1]),
+                                                t_eval=sampled_period,
                                                 state0=state0,
                                                 parameter_values=params,
                                                 **kwargs)
@@ -486,14 +484,14 @@ class DynamicalSystem:
             non_unity_eigenvec = eigenvecs.transpose()[np.abs(eigenvals-1) > 1e-4][0]
 
             # this is numerical unstable for large |kappa|, consider changing to trace formula
-            kappa_trace = trapezoid(np.trace(j, axis1=0, axis2=1), time)/t
-            kappa_monod = np.log(np.min(eigenvals))/t
+            kappa_trace = trapezoid(np.trace(j, axis1=0, axis2=1), sampled_period)/period
+            kappa_monod = np.log(np.min(eigenvals))/period
 
             ### EXTRA 2 & 3 ###
             extras.append(kappa_trace)
             extras.append(kappa_monod)
 
-            y[1] = np.array([np.exp(-kappa_trace*time[t])*np.matmul(fund_matrix[:,:,t], non_unity_eigenvec) for t in range(len(time))]).transpose()
+            y[1] = np.array([np.exp(-kappa_trace*sampled_period[t])*np.matmul(fund_matrix[:,:,t], non_unity_eigenvec) for t in range(len(sampled_period))]).transpose()
             #y[1] = np.array([np.power(np.min(w),-Time[t]/Time[-1])*np.matmul(fund_matrix[:,:,t],
             # non_unity_eigenvec) for t in range(len(Time))]).transpose()
 
@@ -507,26 +505,26 @@ class DynamicalSystem:
                 state0[:self._dimension] = y[0,:,0]
                 state0[self._dimension: 2*self._dimension] = non_unity_eigenvec
 
-                sol = system_o2.get_trajectories(t_span=(0,time[-1]),
-                                                t_eval=time,
+                sol = system_o2.get_trajectories(t_span=(0,sampled_period[-1]),
+                                                t_eval=sampled_period,
                                                 state0=state0,
                                                 parameter_values=params)
 
                 d2_special = sol.y[2*self._dimension:,:]
 
-                y2_data_ini = np.matmul(np.linalg.inv(np.exp(2.*kappa_trace*time[-1])*np.eye(2)-fund_matrix[:,:,-1]), d2_special[:,-1])
-                y[2] = np.array([np.exp(-2.*kappa_trace*time[t])*(np.matmul(fund_matrix[:,:,t], y2_data_ini[:]) + d2_special[:,t]) for t in range(len(time))]).transpose()
+                y2_data_ini = np.matmul(np.linalg.inv(np.exp(2.*kappa_trace*sampled_period[-1])*np.eye(2)-fund_matrix[:,:,-1]), d2_special[:,-1])
+                y[2] = np.array([np.exp(-2.*kappa_trace*sampled_period[t])*(np.matmul(fund_matrix[:,:,t], y2_data_ini[:]) + d2_special[:,t]) for t in range(len(sampled_period))]).transpose()
 
                 ### EXTRA 4 ###
                 extras.append(d2_special)
 
         if show_results is True:
-            print(f'period = {t}')
-            print(f'frequency = {omega}')
+            print(f'period = {period}')
+            print(f'frequency = {circular_frequency}')
             print(f'Floquet exponent (calculated by Jacobian trace)   = {kappa_trace}')
             print(f'Floquet exponent (calculated by Monodromy matrix) = {kappa_monod}')
 
-        return time, y, extras
+        return sampled_period, y, extras
 
     def get_isochrones_isostables(self, params, event, r = 1e-7,
                                   t_max = [20,20], kwargs_limit_cycle={}, **kwargs_int):
