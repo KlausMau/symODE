@@ -45,19 +45,6 @@ def adler():
 
     return  {delta: eta + epsilon*sy.sin(delta)}
 
-def linear_1d():
-    '''linear system (1D)'''
-    x= sy.symbols('x')
-    kappa = sy.symbols('kappa')
-
-    return  {x: kappa*x}
-
-def constant():
-    '''constant system (1D)'''
-    x = sy.symbols('x')
-
-    return {x: 1}
-
 # 2D #
 
 def stuart_landau():
@@ -169,15 +156,6 @@ def coupled_phase_oscillators_harmonics():
 
     return {phi_1: omega_1 + epsilon*sy.sin(phi_2-phi_1) + sigma*sy.sin(2*(phi_2-phi_1)),
             phi_2: omega_2 + epsilon*sy.sin(phi_1-phi_2) + beta*sy.sin(3*(phi_1-phi_2))}
-
-def linear_2d(variables=[sy.symbols('x'), sy.symbols('y')]):
-    '''linear system (2D); variables is a list of Sympy symbols'''
-    x = variables[0]
-    y = variables[1]
-    c = sy.symbols('c')
-
-    return  {x: x - c*y,
-             y: c*x + y}
 
 def oscillator_rok():
     '''Roks oscillator (2D)'''
