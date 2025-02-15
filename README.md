@@ -5,12 +5,6 @@ The used coding convention is PEP8.
 
 ## Backlog
 
-### Architecture
-
-- attribute self._ode should be a dictionary. This would impact a lot of functions (e.g. new_parameter_set)
-
-- should self.parameters/self.variables be a set?
-
 ### Features
 
 - allow ODEs to be dependent on time explicitly
@@ -20,8 +14,6 @@ The used coding convention is PEP8.
 - find_symmetries
 
 - inflection set (see Ref. ?)
-
-- compute total time derivative of observable
 
 - check given ansatz for adjoint equation
 
@@ -33,6 +25,10 @@ The used coding convention is PEP8.
     - as default: if no specifications are given, impose mean field coupling in first variable with coupling parameter "epsilon"
 
 - compute Jacobian, Hessian and compiler only when needed
+
+- make possible to give functions in dynamical equations definition, e.g. mean field in Kuramoto model (more efficient computation; also visually present in equations)
+
+- add links to systems in catalogues
 
 ### Deployment
 
