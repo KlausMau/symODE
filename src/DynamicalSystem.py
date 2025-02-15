@@ -1,3 +1,8 @@
+'''
+This module provides a class to conviently deal with dynamical systems given as ordinary
+differential equations.
+'''
+
 import copy
 import itertools
 import numpy as np
