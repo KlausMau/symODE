@@ -9,11 +9,11 @@ import sympy as sy
 def linear(variables=[sy.symbols('x')], param_name = 'a'):
     '''linear system of arbitrary dimension ("variables" is a list of Sympy symbols)'''
     dynamical_equations = {}
-    for i in range(len(variables)):
+    for var_i in variables:
         f_i = 0
-        for j in range(len(variables)):
-            f_i += sy.symbols(param_name + '_' + str(variables[i]) + '_' + str(variables[j]))*variables[j]
-        dynamical_equations.update({variables[i]: f_i})
+        for var_j in variables:
+            f_i += sy.symbols(f'{param_name}_{var_i}_{var_j}')*var_j
+        dynamical_equations.update({var_i: f_i})
     return  dynamical_equations
 
 def kuramoto(number_of_oscillators=2):
