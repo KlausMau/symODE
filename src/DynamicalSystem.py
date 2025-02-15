@@ -125,6 +125,15 @@ class DynamicalSystem:
 
         self._set_attributes_from_dynamical_equations()
 
+    def get_time_derivative_of_observable(self, observable: sy.Expr) -> sy.Expr:
+        '''returns the time derivative of an observable'''
+        time_derivative = 0
+        for var in self._variables:
+            time_derivative = sy.Add(time_derivative,
+                                     sy.Mul(sy.Derivative(observable, var).doit(),
+                                            self._dynamical_equations[var]))
+        return time_derivative
+
     def _calculate_jacobian(self) -> sy.Matrix:
         '''compute Jacobian matrix of system'''
         jacobian = sy.ones(self._dimension)
