@@ -59,7 +59,6 @@ class DynamicalSystem:
         self._dynamical_equations = dynamical_equations
         self._set_attributes_from_dynamical_equations()
 
-
     def _set_attributes_from_dynamical_equations(self) -> None:
         '''sets the attributes of the dynamical system based on the dynamical equations'''
         self._variables = list(self._dynamical_equations.keys())
@@ -414,10 +413,8 @@ class DynamicalSystem:
         event.terminal = False
 
         # get to equilibrium
-        sol_eq = self.get_trajectories(t_span=(0., t_eq),
-                                       t_eval = [t_eq],
-                                       state0=state0, events=event,
-                                       parameter_values=params,
+        sol_eq = self.get_trajectories((0., t_eq), state0, params,
+                                       t_eval = [t_eq], events=event,
                                        **kwargs)
 
         # integrate from last event one period
@@ -432,10 +429,8 @@ class DynamicalSystem:
 
         time = np.linspace(0, t, samples)
 
-        sol_lc  = self.get_trajectories(t_span=(0., t),
+        sol_lc  = self.get_trajectories((0., t), sol_eq.y_events[0][-1], params,
                                         t_eval = time,
-                                        state0 = sol_eq.y_events[0][-1],
-                                        parameter_values=params,
                                         **kwargs)
 
         # prepare return array
