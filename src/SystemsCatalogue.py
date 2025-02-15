@@ -1,20 +1,14 @@
+'''
+This module provides a catalogue for well-known dynamical systems.
+'''
+
 import sympy as sy
-
-'''
-Catalogue of dynamical systems:
-
-- Reserved name for external stimulation: "I_ext"
-- use only keyword arguments
-
-Documentation:
-- future: make functions possible (also visually)
-'''
 
 # arbitrary dimension #
 
 def linear(variables=[sy.symbols('x')], param_name = 'a'):
     # "variables" is a list of Sympy symbols
-    ODE = {} 
+    ODE = {}
     for i in range(len(variables)):
         f_i = 0
         for j in range(len(variables)):
@@ -28,7 +22,7 @@ def Kuramoto(N=2):
 
     eps = sy.symbols('epsilon')
 
-    
+
     ODE = {}
     for i in range(N):
         phi_i = sy.symbols(str(phi) + '_' + str(i+1))
@@ -48,17 +42,17 @@ def Kuramoto(N=2):
 
 def Adler():
     D = sy.symbols('Delta')
-    
+
     eta = sy.symbols('eta')
     eps = sy.symbols('epsilon')
-    
+
     return  {D: eta + eps*sy.sin(D)}
 
 def linear_1D():
     x= sy.symbols('x')
-    
+
     k = sy.symbols('kappa')
-    
+
     return  {x: k*x}
 
 def constant():
@@ -70,19 +64,19 @@ def constant():
 def Stuart_Landau():
     x = sy.symbols('x')
     y = sy.symbols('y')
-    
+
     mu = sy.symbols('mu')
     w = sy.symbols('omega')
     a = sy.symbols('alpha')
 
-    return {x: mu*x -w*y - (x**2+y**2)*(x-a*y), y: mu*y + w*x - (x**2+y**2)*(y+a*x)}  
+    return {x: mu*x -w*y - (x**2+y**2)*(x-a*y), y: mu*y + w*x - (x**2+y**2)*(y+a*x)}
 
 def van_der_Pol():
     x = sy.symbols('x')
     y = sy.symbols('y')
     eps = sy.symbols('epsilon')
 
-    return {x: y, y: -x + eps*(1-x**2)*y}  
+    return {x: y, y: -x + eps*(1-x**2)*y}
 
 def van_der_Pol_Lienard():
     # should be replaced by transformations soon
@@ -93,35 +87,34 @@ def van_der_Pol_Lienard():
     return {x: eps*(x-x**3/3)-y, y: x}
 
 def FitzHugh_Nagumo():
+    '''FitzHugh-Nagumo model (https://doi.org/10.1016/S0006-3495(61)86902-6)'''
     x = sy.symbols('x', real=True)
     y = sy.symbols('y', real=True)
-    
+
     I = sy.symbols('I')
     tau = sy.symbols('tau')
     a = sy.symbols('a')
     b = sy.symbols('b')
-    
-    return {x: x - x**3/3 - y + I, y: (x + a - b*y)/tau}  
+
+    return {x: x - x**3/3 - y + I, y: (x + a - b*y)/tau}
 
 def harmonic_oscillator():
-    x = sy.symbols('x')
-    y = sy.symbols('y')
-    
-    g = sy.symbols('gamma')
-    w = sy.symbols('omega')
-    
-    return {x: y, y: -2*g*w*y - w**2*x}
+    x, y = sy.symbols('x y')
+    gamma, omega = sy.symbols('gamma omega')
+
+    return {x: y, y: -2*gamma*omega*y - omega**2*x}
 
 def rayleigh():
+    '''Rayleigh oscillator (www.google.com)'''
     x = sy.symbols('x')
     y = sy.symbols('y')
     mu = sy.symbols('mu')
-    w = sy.symbols('omega') 
+    w = sy.symbols('omega')
 
-    return {x: y, y: mu*(1-y**2)*y - w*w*x} 
+    return {x: y, y: mu*(1-y**2)*y - w*w*x}
 
 def homoclinic():
-    x,y = sy.symbols('x,y')
+    x, y = sy.symbols('x, y')
     mu1,mu2 = sy.symbols('mu_1, mu_2')
     return {x: mu1*x + y, y: (mu2-mu1)*y + x**2 - x*y}
 
@@ -135,7 +128,7 @@ def sin_cos_LC():
 def infinity_oscillator():
     x = sy.symbols('x')
     y = sy.symbols('y')
-    
+
     w = sy.symbols('omega')
     k = sy.symbols('kappa')
     r = sy.symbols('r')
@@ -145,13 +138,13 @@ def infinity_oscillator():
     C = -2*x*y/((r+2)*x**2 + r*y**2)
     D = (x**2+y**2)**2/((r+2)*x**2 + r*y**2)
 
-    return {x: w*(x*C-y) + k/2*(D-1)*(x+a*(x*C-y)), 
+    return {x: w*(x*C-y) + k/2*(D-1)*(x+a*(x*C-y)),
             y: w*(y*C+x) + k/2*(D-1)*(y+a*(y*C+x))}
 
 def isostable_2D():
     psi = sy.symbols('psi')
     phi = sy.symbols('phi')
-    
+
     w = sy.symbols('omega')
     k = sy.symbols('kappa')
 
@@ -160,14 +153,14 @@ def isostable_2D():
 def coupled_phase_oscillators():
     p1 = sy.symbols('phi_1')
     p2 = sy.symbols('phi_2')
-    
+
     w1 = sy.symbols('omega_1')
     w2 = sy.symbols('omega_2')
     eps = sy.symbols('epsilon')
     alpha = sy.symbols('alpha')
     I = sy.symbols('I_ext')
 
-    return {p1: w1 + eps*sy.sin(p1-p2+alpha) + I*sy.sin(p1), p2: w2 + eps*sy.sin(p2-p1+alpha)}  
+    return {p1: w1 + eps*sy.sin(p1-p2+alpha) + I*sy.sin(p1), p2: w2 + eps*sy.sin(p2-p1+alpha)}
 
 def coupled_oscillators_isostable():
     # not needed anymore #
@@ -191,12 +184,12 @@ def coupled_oscillators_isostable():
     # PRC = sin
     Z = sy.sin
 
-    return {phi: w + I*Z(phi_2)/2, psi: -2*eps*sy.sqrt(1-C**2)*psi - I*d_psi*Z(phi_2)} 
+    return {phi: w + I*Z(phi_2)/2, psi: -2*eps*sy.sqrt(1-C**2)*psi - I*d_psi*Z(phi_2)}
 
 def coupled_phase_oscillators_harmonics():
     p1 = sy.symbols('phi_1')
     p2 = sy.symbols('phi_2')
-    
+
     w1 = sy.symbols('omega_1')
     w2 = sy.symbols('omega_2')
     eps = sy.symbols('epsilon')
@@ -205,8 +198,8 @@ def coupled_phase_oscillators_harmonics():
     beta = sy.symbols('beta')
     I = sy.symbols('I_ext')
 
-    return {p1: w1 + eps*sy.sin(p2-p1) + sigma*sy.sin(2*(p2-p1)) + I*sy.sin(p1), 
-            p2: w2 + eps*sy.sin(p1-p2) + beta*sy.sin(3*(p1-p2))}  
+    return {p1: w1 + eps*sy.sin(p2-p1) + sigma*sy.sin(2*(p2-p1)) + I*sy.sin(p1),
+            p2: w2 + eps*sy.sin(p1-p2) + beta*sy.sin(3*(p1-p2))}
 
 def linear_2D(variables=[sy.symbols('x'), sy.symbols('y')]):
     ''' "variables" is a list of Sympy symbols '''
@@ -221,9 +214,9 @@ def oscillator_Rok():
     x = sy.symbols('x')
     y = sy.symbols('y')
     a = sy.symbols('a')
-    b = sy.symbols('b') 
+    b = sy.symbols('b')
 
-    return {x: y - a*sy.sin(y)*x, y: -x + b*sy.cos(x)*y} 
+    return {x: y - a*sy.sin(y)*x, y: -x + b*sy.cos(x)*y}
 
 # 3D #
 
@@ -249,7 +242,7 @@ def Roessler():
     x = sy.symbols('x')
     y = sy.symbols('y')
     z = sy.symbols('z')
-    
+
     a = sy.symbols('a')
     b = sy.symbols('b')
     c = sy.symbols('c')
@@ -270,17 +263,17 @@ def Hindmarsh_Rose():
     I = sy.symbols('I')
     x_R = sy.symbols('x_R')
 
-    return {x: y - a*x**3 + b*x**2 - z + I, 
-            y: c - d*x**2 - y, 
+    return {x: y - a*x**3 + b*x**2 - z + I,
+            y: c - d*x**2 - y,
             z: r*(s*(x-x_R)-z)}
 
 def isostable_3D():
-        psi_1 = sy.symbols('psi_1')
-        psi_2 = sy.symbols('psi_2')
-        phi = sy.symbols('phi')
-        
-        w = sy.symbols('omega')
-        k_1 = sy.symbols('kappa_1')
-        k_2 = sy.symbols('kappa_2')
+    psi_1 = sy.symbols('psi_1')
+    psi_2 = sy.symbols('psi_2')
+    phi = sy.symbols('phi')
 
-        return {phi: w, psi_1: k_1*psi_1, psi_2: k_2*psi_2}
+    w = sy.symbols('omega')
+    k_1 = sy.symbols('kappa_1')
+    k_2 = sy.symbols('kappa_2')
+
+    return {phi: w, psi_1: k_1*psi_1, psi_2: k_2*psi_2}
