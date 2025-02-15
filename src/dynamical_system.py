@@ -438,85 +438,86 @@ class DynamicalSystem:
         y[0] = sol_lc.y
 
         extras = []
-        if isostable_expansion_order>=1:
+        if isostable_expansion_order==0:
+            return sampled_period, y, extras
 
-            ### calculate Jacobian at limit cycle ###
+        ### calculate Jacobian at limit cycle ###
 
-            self._calculate_jacobian()
-            j_np = lambdify(tuple(self._variables), self._jacobian.doit().subs(params),
-                                         cse=True)
+        self._calculate_jacobian()
+        j_np = lambdify(tuple(self._variables), self._jacobian.doit().subs(params), cse=True)
 
-            j = np.zeros((self._dimension, self._dimension, samples))
+        j = np.zeros((self._dimension, self._dimension, samples))
 
-            for period in range(samples):
-                j[:,:,period] = j_np(*y[0,:,period])
+        for period in range(samples):
+            j[:,:,period] = j_np(*y[0,:,period])
 
-            ### EXTRA 0 ### --> "extra" to dictionary
-            extras.append(j)
+        ### EXTRA 0 ### --> "extra" to dictionary
+        extras.append(j)
 
-            ### calculate fundamental solution matrix ###
+        ### calculate fundamental solution matrix ###
 
-            system_o1 = self.get_new_system_with_perturbation_variables(order=1)
+        system_o1 = self.get_new_system_with_perturbation_variables(order=1)
 
-            fund_matrix = np.zeros((self._dimension, self._dimension, len(sampled_period)))
-            fund_matrix[:,:,0] = np.eye(self._dimension)
+        fund_matrix = np.zeros((self._dimension, self._dimension, len(sampled_period)))
+        fund_matrix[:,:,0] = np.eye(self._dimension)
 
-            for n in range(self._dimension):
-                # design the initial state
-                state0 = np.zeros(2*self._dimension)
-                state0[:self._dimension] = y[0,:,0]
-                state0[self._dimension + n] = 1.
+        for n in range(self._dimension):
+            # design the initial state
+            state0 = np.zeros(2*self._dimension)
+            state0[:self._dimension] = y[0,:,0]
+            state0[self._dimension + n] = 1.
 
-                sol = system_o1.get_trajectories(t_span=(0,sampled_period[-1]),
-                                                t_eval=sampled_period,
-                                                state0=state0,
-                                                parameter_values=params,
-                                                **kwargs)
+            sol = system_o1.get_trajectories(t_span=(0,sampled_period[-1]),
+                                            t_eval=sampled_period,
+                                            state0=state0,
+                                            parameter_values=params,
+                                            **kwargs)
 
-                fund_matrix[:,n,:] = sol.y[self._dimension:,:]
+            fund_matrix[:,n,:] = sol.y[self._dimension:,:]
 
-            ### EXTRA 1 ###
-            extras.append(fund_matrix)
+        ### EXTRA 1 ###
+        extras.append(fund_matrix)
 
-            # eigenvalues/-vectors of monodromy matrix (this is for N=2 only!!)
-            # this selection process has to be revisited!
-            eigenvals, eigenvecs = np.linalg.eig(fund_matrix[:,:,-1])
-            non_unity_eigenvec = eigenvecs.transpose()[np.abs(eigenvals-1) > 1e-4][0]
+        # eigenvalues/-vectors of monodromy matrix (this is for N=2 only!!)
+        # this selection process has to be revisited!
+        eigenvals, eigenvecs = np.linalg.eig(fund_matrix[:,:,-1])
+        non_unity_eigenvec = eigenvecs.transpose()[np.abs(eigenvals-1) > 1e-4][0]
 
-            # this is numerical unstable for large |kappa|, consider changing to trace formula
-            kappa_trace = trapezoid(np.trace(j, axis1=0, axis2=1), sampled_period)/period
-            kappa_monod = np.log(np.min(eigenvals))/period
+        # this is numerical unstable for large |kappa|, consider changing to trace formula
+        kappa_trace = trapezoid(np.trace(j, axis1=0, axis2=1), sampled_period)/period
+        kappa_monod = np.log(np.min(eigenvals))/period
 
-            ### EXTRA 2 & 3 ###
-            extras.append(kappa_trace)
-            extras.append(kappa_monod)
+        ### EXTRA 2 & 3 ###
+        extras.append(kappa_trace)
+        extras.append(kappa_monod)
 
-            y[1] = np.array([np.exp(-kappa_trace*sampled_period[t])*np.matmul(fund_matrix[:,:,t], non_unity_eigenvec) for t in range(len(sampled_period))]).transpose()
-            #y[1] = np.array([np.power(np.min(w),-Time[t]/Time[-1])*np.matmul(fund_matrix[:,:,t],
-            # non_unity_eigenvec) for t in range(len(Time))]).transpose()
+        y[1] = np.array([np.exp(-kappa_trace*sampled_period[t])*np.matmul(fund_matrix[:,:,t], non_unity_eigenvec) for t in range(len(sampled_period))]).transpose()
+        #y[1] = np.array([np.power(np.min(w),-Time[t]/Time[-1])*np.matmul(fund_matrix[:,:,t],
+        # non_unity_eigenvec) for t in range(len(Time))]).transpose()
 
-            if isostable_expansion_order>=2:
+        if isostable_expansion_order==1:
+            return sampled_period, y, extras
 
-                ### calculate special solution for d2 ###
+        ### calculate special solution for d2 ###
 
-                system_o2 = self.get_new_system_with_perturbation_variables(order=2)
+        system_o2 = self.get_new_system_with_perturbation_variables(order=2)
 
-                state0 = np.zeros(3*self._dimension)
-                state0[:self._dimension] = y[0,:,0]
-                state0[self._dimension: 2*self._dimension] = non_unity_eigenvec
+        state0 = np.zeros(3*self._dimension)
+        state0[:self._dimension] = y[0,:,0]
+        state0[self._dimension: 2*self._dimension] = non_unity_eigenvec
 
-                sol = system_o2.get_trajectories(t_span=(0,sampled_period[-1]),
-                                                t_eval=sampled_period,
-                                                state0=state0,
-                                                parameter_values=params)
+        sol = system_o2.get_trajectories(t_span=(0,sampled_period[-1]),
+                                        t_eval=sampled_period,
+                                        state0=state0,
+                                        parameter_values=params)
 
-                d2_special = sol.y[2*self._dimension:,:]
+        d2_special = sol.y[2*self._dimension:,:]
 
-                y2_data_ini = np.matmul(np.linalg.inv(np.exp(2.*kappa_trace*sampled_period[-1])*np.eye(2)-fund_matrix[:,:,-1]), d2_special[:,-1])
-                y[2] = np.array([np.exp(-2.*kappa_trace*sampled_period[t])*(np.matmul(fund_matrix[:,:,t], y2_data_ini[:]) + d2_special[:,t]) for t in range(len(sampled_period))]).transpose()
+        y2_data_ini = np.matmul(np.linalg.inv(np.exp(2.*kappa_trace*sampled_period[-1])*np.eye(2)-fund_matrix[:,:,-1]), d2_special[:,-1])
+        y[2] = np.array([np.exp(-2.*kappa_trace*sampled_period[t])*(np.matmul(fund_matrix[:,:,t], y2_data_ini[:]) + d2_special[:,t]) for t in range(len(sampled_period))]).transpose()
 
-                ### EXTRA 4 ###
-                extras.append(d2_special)
+        ### EXTRA 4 ###
+        extras.append(d2_special)
 
         if show_results is True:
             print(f'period = {period}')
