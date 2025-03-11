@@ -394,6 +394,7 @@ class DynamicalSystem:
                         show_results = True,
                         **kwargs):
         '''
+        currently only for 2D systems
         returns:
         Time:       instances of time, Time[-1] is the period
         y:          limit cycle expansion;
@@ -414,7 +415,14 @@ class DynamicalSystem:
 
 
         period = sol_eq.t_events[0][-1]-sol_eq.t_events[0][-2]
+        extras.update({"period": period})
+
         circular_frequency = 2*np.pi/period
+        extras.update({"circular_frequency": circular_frequency})
+
+        if show_results is True:
+            print(f'period = {period}')
+            print(f'frequency = {circular_frequency}')
 
         sampled_period = np.linspace(0, period, samples)
 
