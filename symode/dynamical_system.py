@@ -8,7 +8,6 @@ import itertools
 import numpy as np
 import sympy as sy
 import numba as nb
-from IPython.core.display import display, Math
 
 from scipy.integrate import solve_ivp, trapezoid, cumulative_trapezoid
 from sympy.utilities import lambdify
@@ -64,6 +63,9 @@ class DynamicalSystem:
         self._dynamical_equations = dynamical_equations
         self._set_attributes_from_dynamical_equations()
 
+    def __str__(self) -> str:
+        return self.get_dynamical_equations_in_latex()
+
     def _set_attributes_from_dynamical_equations(self) -> None:
         """sets the attributes of the dynamical system based on the dynamical equations"""
         self._variables = list(self._dynamical_equations.keys())
@@ -76,19 +78,13 @@ class DynamicalSystem:
         self._hessian = self._calculate_hessian()
         self._f_odeint = self._compile_integrator()
 
-    # convenience features
-
-    def show(self) -> None:
-        """prints the LaTeX code"""
-        display(Math(rf"{self.get_dynamical_equations_in_latex()}"))
-
     def get_dynamical_equations_in_latex(self) -> str:
         """returns the LaTeX string of the dynamical equations"""
-        ode_latex = "$"
-        for var in self._variables:
-            ode_latex += rf"\dot {sy.latex(var)} = {sy.latex(self._dynamical_equations[var])} \\\\"
-        ode_latex += "$"
-        return ode_latex
+        equations = [
+            rf"\dot {sy.latex(var)} = {sy.latex(self._dynamical_equations[var])} \\"
+            for var in self._variables
+        ]
+        return "".join(equations)
 
     # symbolic features
 
@@ -231,7 +227,7 @@ class DynamicalSystem:
         (2) dot d_2 = J_F(x)*d_2 + H(x, d_1)
         """
 
-        new_dynamical_equations = dict() 
+        new_dynamical_equations = dict()
 
         # terms of order "0"
         if order < 0:
