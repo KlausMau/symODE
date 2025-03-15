@@ -26,3 +26,5 @@ optional = true
 
 [tool.poetry.group.dev.dependencies]
 black = "*"
+pylint = "*"
+mypy = "*"
