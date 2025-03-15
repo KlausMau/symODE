@@ -35,3 +35,4 @@ optional = true
 [tool.poetry.group.interactive.dependencies]
 jupyter = "*"
 matplotlib = "*"
+black = { version = "*", extras = ["jupyter"] }
