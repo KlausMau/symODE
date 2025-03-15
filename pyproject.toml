@@ -24,6 +24,7 @@ build-backend = "poetry.core.masonry.api"
 optional = true
 
 [tool.poetry.group.dev.dependencies]
+poethepoet = { version = "*", extras = ["poetry_plugin"] }
 black = "*"
 pylint = "*"
 mypy = "*"
@@ -35,3 +36,10 @@ optional = true
 jupyter = "*"
 matplotlib = "*"
 black = { version = "*", extras = ["jupyter"] }
+
+[tool.poe]
+poetry_command = ""
+
+[tool.poe.tasks]
+format = "black ./examples/ ./symode/"
+lint = "pylint ./examples/ ./symode/"
