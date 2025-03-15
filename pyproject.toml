@@ -28,3 +28,10 @@ optional = true
 black = "*"
 pylint = "*"
 mypy = "*"
+
+[tool.poetry.group.interactive]
+optional = true
+
+[tool.poetry.group.interactive.dependencies]
+jupyter = "*"
+matplotlib = "*"
