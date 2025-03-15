@@ -12,7 +12,7 @@ from IPython.core.display import display, Math
 
 from scipy.integrate import solve_ivp, trapezoid, cumulative_trapezoid
 from sympy.utilities import lambdify
-from src import systems_catalogue
+from symode import systems_catalogue
 
 def get_dynamical_equations_from_catalogue(name: str, **params) -> dict:
     '''returns a dynamical equations dictionary if "name" is found in the catalogue'''
