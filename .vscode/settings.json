@@ -1,8 +1,0 @@
-{
-    "python.analysis.typeCheckingMode": "basic",
-    "python.analysis.autoImportCompletions": true,
-    "[git-commit]": {"editor.rulers": [50]},
-    "[python]": {
-        "editor.rulers": [100]
-    }
-}
