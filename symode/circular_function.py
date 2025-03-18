@@ -61,20 +61,19 @@ class CircularRealFunction:
             raise ValueError(
                 "Number of desired Fourier modes too large for sample number!"
             )
-        else:
-            l = np.zeros((np_x.size, 2 * maximum_mode_number + 1))
-            for i in range(np_x.size):
-                l[i, 0] = 1.0
-                for j in range(maximum_mode_number):
-                    l[i, 2 * j + 1] = 2.0 * np.cos((j + 1) * np_x[i])
-                    l[i, 2 * j + 2] = 2.0 * np.sin((j + 1) * np_x[i])
+        l = np.zeros((np_x.size, 2 * maximum_mode_number + 1))
+        for i in range(np_x.size):
+            l[i, 0] = 1.0
+            for j in range(maximum_mode_number):
+                l[i, 2 * j + 1] = 2.0 * np.cos((j + 1) * np_x[i])
+                l[i, 2 * j + 2] = 2.0 * np.sin((j + 1) * np_x[i])
 
-            modes_sincos = min_sqsum(l, np_y)
+        modes_sincos = min_sqsum(l, np_y)
 
-            # translate sin and cos to complex modes
-            modes[0] = modes_sincos[0]
-            for n in range(1, maximum_mode_number + 1):
-                modes[n] = modes_sincos[2 * n - 1] + 1j * modes_sincos[2 * n]
+        # translate sin and cos to complex modes
+        modes[0] = modes_sincos[0]
+        for n in range(1, maximum_mode_number + 1):
+            modes[n] = modes_sincos[2 * n - 1] + 1j * modes_sincos[2 * n]
 
         self._fourier_modes = modes
 
