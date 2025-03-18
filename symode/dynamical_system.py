@@ -69,13 +69,13 @@ class DynamicalSystem:
     def _set_attributes_from_dynamical_equations(self) -> None:
         """sets the attributes of the dynamical system based on the dynamical equations"""
         self._variables = list(self._dynamical_equations.keys())
-        self._variables.sort()
+        self._variables.sort(key=lambda x: str(x))
 
         self._dimension = len(self._variables)
 
         all_symbols = sy.Matrix(list(self._dynamical_equations.values())).free_symbols
         self._parameters = list(set(all_symbols) - set(self._variables))
-        self._parameters.sort()
+        self._parameters.sort(key=lambda x: str(x))
 
         self._jacobian = self._calculate_jacobian()
         self._hessian = self._calculate_hessian()
