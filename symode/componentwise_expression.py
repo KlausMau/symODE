@@ -78,7 +78,7 @@ class ComponentwiseExpression:
 
     def sum_up(self) -> sy.Expr:
         """returns the full SymPy expression"""
-        return sum([component * term for component, term in self._expression.items()])
+        return sum(component * term for component, term in self._expression.items())
 
     def subs(self, substitutions: dict[sy.Expr, sy.Expr]) -> None:
         """substitutes one expression for another in bases and coefficients"""
