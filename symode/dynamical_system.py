@@ -635,9 +635,15 @@ class DynamicalSystem:
         return sampled_period, y, extras
 
     def get_isochrones_isostables(
-        self, params, event, r=1e-7, t_max=[20, 20], kwargs_limit_cycle={}, **kwargs_int
+        self, params, event, r=1e-7, t_max=None, kwargs_limit_cycle=None, **kwargs_int
     ):
         """infer phase-isostable structure for 2D system by backward integration"""
+
+        if t_max is None:
+            t_max = [20, 20]
+
+        if kwargs_limit_cycle is None:
+            kwargs_limit_cycle = {}
 
         # obtain limit cycle
         time, y, _ = self.get_limit_cycle(
