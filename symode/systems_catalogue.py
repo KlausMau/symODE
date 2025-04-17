@@ -7,8 +7,8 @@ import sympy as sy
 # arbitrary dimension #
 
 
-def linear(variables=[sy.symbols("x")], param_name="a"):
-    """linear system of arbitrary dimension ("variables" is a list of Sympy symbols)"""
+def linear(variables: list[sy.Expr], param_name="a"):
+    """linear system of arbitrary dimension"""
     dynamical_equations = {}
     for var_i in variables:
         f_i = 0
