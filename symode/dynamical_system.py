@@ -766,7 +766,7 @@ class DynamicalSystem:
 
         if self._dimension != 2:
             print("This function is still only implemented for 2-dimensional systems.")
-            return list()
+            return []
 
         # new DynamicalSystem with fixed parameters
         system = self.get_new_system_with_fixed_parameters(params)
@@ -774,7 +774,7 @@ class DynamicalSystem:
         # compute fixed points
         fixed_points = system.get_fixed_points()
 
-        output = list()
+        output = []
 
         for fp in fixed_points:
             # Jacobian at fixed point
