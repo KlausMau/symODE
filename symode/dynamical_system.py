@@ -238,7 +238,7 @@ class DynamicalSystem:
         (2) dot d_2 = J_F(x)*d_2 + H(x, d_1)
         """
 
-        new_dynamical_equations = dict()
+        new_dynamical_equations = {}
 
         # terms of order "0"
         if order < 0:
