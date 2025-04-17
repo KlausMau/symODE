@@ -53,7 +53,7 @@ class ComponentwiseExpression:
     """
 
     def __init__(self, expression: sy.Expr) -> None:
-        self._expression = {1: expression}
+        self._expression = {sy.Expr(1): expression}
 
     def split(self, split_term: sy.Expr) -> None:
         """splits the components based on the split term"""
