@@ -725,7 +725,7 @@ class DynamicalSystem:
 
         if self._dimension != 2:
             print("This works only for 2-dimensional systems!")
-            return
+            return None
 
         # compute fixed points
         fp = self.get_fixed_points()
@@ -742,7 +742,7 @@ class DynamicalSystem:
 
         if np.imag(eigenvalues[0]) == 0:
             print("This function works only for fixed points of focus type!")
-            return
+            return None
 
         p = eigenvectors[0, 0]
         q = eigenvectors[1, 0]
