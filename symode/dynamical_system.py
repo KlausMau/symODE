@@ -698,7 +698,7 @@ class DynamicalSystem:
 
             # rolling the states times further in time to form isochrones
 
-            for t, t in enumerate(time_samples[z][:]):
+            for t, _ in enumerate(time_samples[z][:]):
                 for i in [0, 1]:
                     states[sign][:, t, i] = np.roll(states[sign][:, t, i], -t)
 
