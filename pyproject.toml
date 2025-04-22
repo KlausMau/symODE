@@ -28,6 +28,7 @@ poethepoet = { version = "*", extras = ["poetry_plugin"] }
 black = "*"
 pylint = "*"
 mypy = "*"
+pytest = "*"
 
 [tool.poetry.group.interactive]
 optional = true
@@ -41,5 +42,6 @@ black = { version = "*", extras = ["jupyter"] }
 poetry_command = ""
 
 [tool.poe.tasks]
-format = "black ./examples/ ./symode/"
-lint = "pylint ./examples/ ./symode/"
+format = "black ./examples/ ./symode/ ./tests"
+lint = "pylint ./examples/ ./symode/ ./tests"
+test = "pytest"
