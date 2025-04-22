@@ -19,12 +19,15 @@ dependencies = [
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
 
+[tool.poetry.scripts]
+format = "scripts:format"
+lint = "scripts:lint"
+test = "scripts:test"
 
 [tool.poetry.group.dev]
 optional = true
 
 [tool.poetry.group.dev.dependencies]
-poethepoet = { version = "*", extras = ["poetry_plugin"] }
 black = "*"
 pylint = "*"
 mypy = "*"
@@ -37,11 +40,3 @@ optional = true
 jupyter = "*"
 matplotlib = "*"
 black = { version = "*", extras = ["jupyter"] }
-
-[tool.poe]
-poetry_command = ""
-
-[tool.poe.tasks]
-format = "black ./examples/ ./symode/ ./tests"
-lint = "pylint ./examples/ ./symode/ ./tests"
-test = "pytest"
