@@ -8,4 +8,4 @@ def lint():
     os.system("mypy .")
 
 def test():
-    os.system("pytest")
+    os.system("pytest -v -ra")
