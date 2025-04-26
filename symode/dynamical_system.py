@@ -9,11 +9,14 @@ import numpy as np
 import sympy as sy
 import numba as nb
 
+from typing import NewType
 from numpy.typing import NDArray
 from scipy.integrate import solve_ivp, trapezoid, cumulative_trapezoid
 from sympy.utilities import lambdify
 from symode import systems_catalogue
 
+NumericSubstitution = NewType('NumericSubstitution', dict[sy.Symbol | float])
+SymbolicSubstitution = NewType('SymbolicSubstitution', dict[sy.Symbol | sy.Expr])
 
 def get_dynamical_equations_from_catalogue(name: str, **params) -> dict:
     """returns a dynamical equations dictionary if "name" is found in the catalogue"""
@@ -46,7 +49,7 @@ class DynamicalSystem:
     """
 
     def __init__(
-        self, dynamical_equations: str | dict[sy.Symbol, sy.Expr], **params
+        self, dynamical_equations: str | SymbolicSubstitution, **params
     ) -> None:
         """
         dynamical equations are given as "str" or "dict"
@@ -126,7 +129,7 @@ class DynamicalSystem:
 
         return fixed_points
 
-    def set_parameter_value(self, parameter_values: dict[sy.Symbol, sy.Expr]) -> None:
+    def set_parameter_value(self, parameter_values: SymbolicSubstitution) -> None:
         """modifies the system by replacing parameters"""
         for var in self._variables:
             new_dynamical_equation = self._dynamical_equations[var].subs(
@@ -199,7 +202,7 @@ class DynamicalSystem:
         return DynamicalSystem(new_dynamical_equations)
 
     def get_new_system_after_transformation(
-        self, new_variables, equations: dict[sy.Symbol, sy.Expr], **kwargs
+        self, new_variables, equations: SymbolicSubstitution, **kwargs
     ):
         """
         expects list:
@@ -286,7 +289,7 @@ class DynamicalSystem:
 
     def get_new_system_with_coupling(
         self,
-        coupling_function: dict[sy.Symbol, sy.Expr],
+        coupling_function: SymbolicSubstitution,
         coupling_matrix: sy.Matrix = sy.ones(3, 3),
         non_identical_parameters=None,
     ):
@@ -470,7 +473,7 @@ class DynamicalSystem:
 
     def get_limit_cycle(
         self,
-        parameter_values: dict[sy.Symbol | float],
+        parameter_values: NumericSubstitution,
         event,
         state0: NDArray,
         t_eq: float = 100,
@@ -850,7 +853,7 @@ class DynamicalSystem:
         return output
 
     def get_time_averaged_jacobian(
-        self, t_span, state0, parameter_values: dict[sy.Symbol | sy.Expr], **kwargs
+        self, t_span, state0, parameter_values: SymbolicSubstitution, **kwargs
     ):
         """returns the time-averaged Jacobian matrix of the system"""
 
