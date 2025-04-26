@@ -1,5 +1,6 @@
 import pytest
 import sympy as sy
+import numpy as np
 from symode.dynamical_system import DynamicalSystem
 
 variable = sy.symbols("x")
@@ -44,3 +45,18 @@ def test_set_parameter_value(test_system):
     assert test_system.get_parameters() == []
     assert test_system.get_variables() == [variable]
     assert test_system._dynamical_equations == {variable: variable}
+
+
+def test_get_limit_cycle(test_system_stuart_landau):
+    def event(t, state, args):
+        return state[0]
+
+    event.direction = -1
+
+    _, _, extras = test_system_stuart_landau.get_limit_cycle(
+        {}, event, np.array([0, 1])
+    )
+
+    tolerance = 1e-7
+
+    assert np.abs(extras["circular_frequency"] - 1.0) < tolerance

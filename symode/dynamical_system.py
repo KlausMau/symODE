@@ -9,6 +9,7 @@ import numpy as np
 import sympy as sy
 import numba as nb
 
+from numpy.typing import NDArray
 from scipy.integrate import solve_ivp, trapezoid, cumulative_trapezoid
 from sympy.utilities import lambdify
 from symode import systems_catalogue
@@ -469,13 +470,13 @@ class DynamicalSystem:
 
     def get_limit_cycle(
         self,
-        params,
+        parameter_values: dict[sy.Symbol | float],
         event,
-        state0=None,
-        t_eq=100,
-        samples=1000,
-        isostable_expansion_order=0,
-        show_results=True,
+        state0: NDArray,
+        t_eq: float = 100,
+        samples: int = 1000,
+        isostable_expansion_order: int = 0,
+        show_results: bool = True,
         **kwargs,
     ):
         """
@@ -492,7 +493,7 @@ class DynamicalSystem:
 
         # get to equilibrium
         sol_eq = self.get_trajectories(
-            (0.0, t_eq), state0, params, t_eval=[t_eq], events=event, **kwargs
+            (0.0, t_eq), state0, parameter_values, t_eval=[t_eq], events=event, **kwargs
         )
 
         # integrate from last event one period
@@ -514,7 +515,7 @@ class DynamicalSystem:
         sol_lc = self.get_trajectories(
             (0.0, period),
             sol_eq.y_events[0][-1],
-            params,
+            parameter_values,
             t_eval=sampled_period,
             **kwargs,
         )
@@ -532,7 +533,9 @@ class DynamicalSystem:
 
         self._calculate_jacobian()
         j_np = lambdify(
-            tuple(self._variables), self._jacobian.doit().subs(params), cse=True
+            tuple(self._variables),
+            self._jacobian.doit().subs(parameter_values),
+            cse=True,
         )
 
         j = np.zeros((self._dimension, self._dimension, samples))
@@ -559,7 +562,7 @@ class DynamicalSystem:
                 t_span=(0, sampled_period[-1]),
                 t_eval=sampled_period,
                 state0=state0,
-                parameter_values=params,
+                parameter_values=parameter_values,
                 **kwargs,
             )
 
@@ -604,7 +607,7 @@ class DynamicalSystem:
             t_span=(0, sampled_period[-1]),
             t_eval=sampled_period,
             state0=state0,
-            parameter_values=params,
+            parameter_values=parameter_values,
         )
 
         d2_special = sol.y[2 * self._dimension :, :]
