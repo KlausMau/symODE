@@ -128,8 +128,8 @@ class DynamicalSystem:
     def set_parameter_value(self, parameter_values: dict[sy.Symbol, sy.Expr]) -> None:
         """modifies the system by replacing parameters"""
         for var in self._variables:
-            new_dynamical_equation = sy.Expr(
-                self._dynamical_equations[var].subs(parameter_values)
+            new_dynamical_equation = self._dynamical_equations[var].subs(
+                parameter_values
             )
             self._dynamical_equations.update({var: new_dynamical_equation})
 
