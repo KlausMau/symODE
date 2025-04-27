@@ -1,7 +1,7 @@
 import pytest
 import sympy as sy
 import numpy as np
-from symode.dynamical_system import DynamicalSystem
+from symode.dynamical_system import DynamicalSystem, SymbolicSubstitution
 
 variable = sy.symbols("x")
 parameter = sy.symbols("p")
@@ -17,7 +17,7 @@ def test_system() -> DynamicalSystem:
 def test_system_stuart_landau() -> DynamicalSystem:
     test_system = DynamicalSystem("stuart_landau")
     alpha, mu, omega = test_system.get_parameters()
-    standard_params = {alpha: 0, mu: 1, omega: 1}
+    standard_params = SymbolicSubstitution({alpha: 0, mu: 1, omega: 1})
     test_system.set_parameter_value(standard_params)
     return test_system
 

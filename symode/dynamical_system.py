@@ -18,11 +18,11 @@ from symode import systems_catalogue
 NumericSubstitution = NewType('NumericSubstitution', dict[sy.Symbol , float])
 SymbolicSubstitution = NewType('SymbolicSubstitution', dict[sy.Symbol , sy.Expr])
 
-def get_dynamical_equations_from_catalogue(name: str, **params) -> dict:
+def get_dynamical_equations_from_catalogue(name: str, **params) -> SymbolicSubstitution:
     """returns a dynamical equations dictionary if "name" is found in the catalogue"""
     if hasattr(systems_catalogue, name) is False:
         print(f"{name} is not in the catalogue.")
-        return {}
+        return SymbolicSubstitution({})
 
     dynamical_equations_builder = getattr(systems_catalogue, name)
     return dynamical_equations_builder(**params)
@@ -188,7 +188,7 @@ class DynamicalSystem:
 
     # return a new DynamicalSystem object
 
-    def get_new_system_with_fixed_parameters(self, parameter_values: dict):
+    def get_new_system_with_fixed_parameters(self, parameter_values: SymbolicSubstitution):
         """returns a new dynamical system with fixed parameter values"""
         new_system = DynamicalSystem(self._dynamical_equations)
         new_system.set_parameter_value(parameter_values)
@@ -229,7 +229,7 @@ class DynamicalSystem:
         ode_new = jacobian_inv * substituted_dynamical_equations
 
         # put into dictionary
-        new_dynamical_equations = {}
+        new_dynamical_equations = SymbolicSubstitution({})
         for i, x_new in enumerate(new_variables):
             new_dynamical_equations[x_new] = ode_new[i].cancel()
 
@@ -242,7 +242,7 @@ class DynamicalSystem:
         (2) dot d_2 = J_F(x)*d_2 + H(x, d_1)
         """
 
-        new_dynamical_equations = {}
+        new_dynamical_equations = SymbolicSubstitution({})
 
         # terms of order "0"
         if order < 0:
@@ -305,7 +305,7 @@ class DynamicalSystem:
         number_of_units = len(np.array(coupling_matrix)[0])
 
         # write ODEs for new indexed variables
-        new_dynamical_equation = {}
+        new_dynamical_equation = SymbolicSubstitution({})
         for i in range(number_of_units):
             indexed_symbols = get_symbols_with_index(self._variables, i + 1)
             indexed_parameters = get_symbols_with_index(non_identical_parameters, i + 1)
