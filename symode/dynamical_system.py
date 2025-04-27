@@ -206,6 +206,38 @@ class DynamicalSystem:
 
         return jacobian_at_limit_cycle
 
+    def _calculate_fundamental_matrix(
+        self,
+        time_instances: NDArray,
+        state0: NDArray,
+        parameter_values: NumericSubstitution,
+        **kwargs,
+    ) -> NDArray:
+        system_o1 = self.get_new_system_with_perturbation_variables(order=1)
+
+        fundamental_matrix = np.zeros(
+            (self._dimension, self._dimension, len(time_instances))
+        )
+        fundamental_matrix[:, :, 0] = np.eye(self._dimension)
+
+        for n in range(self._dimension):
+            # design the initial state
+            state0_o1 = np.zeros(2 * self._dimension)
+            state0_o1[: self._dimension] = state0
+            state0_o1[self._dimension + n] = 1.0
+
+            solution_o1 = system_o1.get_trajectories(
+                (0, time_instances[-1]),
+                state0_o1,
+                parameter_values,
+                t_eval=time_instances,
+                **kwargs,
+            )
+
+            fundamental_matrix[:, n, :] = solution_o1.y[self._dimension :, :]
+
+        return fundamental_matrix
+
     # return a new DynamicalSystem object
 
     def get_new_system_with_fixed_parameters(
@@ -556,31 +588,9 @@ class DynamicalSystem:
         )
         extras.update({"jacobian": jacobian_at_limit_cycle})
 
-        ### calculate fundamental solution matrix ###
-
-        system_o1 = self.get_new_system_with_perturbation_variables(order=1)
-
-        fundamental_matrix = np.zeros(
-            (self._dimension, self._dimension, len(sampled_period))
+        fundamental_matrix = self._calculate_fundamental_matrix(
+            sampled_period, isostable_expansion[0, :, 0], parameter_values
         )
-        fundamental_matrix[:, :, 0] = np.eye(self._dimension)
-
-        for n in range(self._dimension):
-            # design the initial state
-            state0 = np.zeros(2 * self._dimension)
-            state0[: self._dimension] = isostable_expansion[0, :, 0]
-            state0[self._dimension + n] = 1.0
-
-            sol = system_o1.get_trajectories(
-                t_span=(0, sampled_period[-1]),
-                t_eval=sampled_period,
-                state0=state0,
-                parameter_values=parameter_values,
-                **kwargs,
-            )
-
-            fundamental_matrix[:, n, :] = sol.y[self._dimension :, :]
-
         extras.update({"fundamental_matrix": fundamental_matrix})
 
         # eigenvalues/-vectors of monodromy matrix (this is for N=2 only!!)
