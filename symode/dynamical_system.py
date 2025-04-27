@@ -514,7 +514,7 @@ class DynamicalSystem:
         """
         event.terminal = False
         extras = {}
-        
+
         transient_solution = self.get_trajectories(
             (0.0, t_eq), state0, parameter_values, t_eval=[t_eq], events=event, **kwargs
         )
@@ -536,7 +536,7 @@ class DynamicalSystem:
 
         sampled_period = np.linspace(0, period, samples)
 
-        sol_lc = self.get_trajectories(
+        limit_cycle_solution = self.get_trajectories(
             (0.0, period),
             transient_solution.y_events[0][-1],
             parameter_values,
@@ -545,16 +545,14 @@ class DynamicalSystem:
         )
 
         # prepare return array
-        y = np.zeros((isostable_expansion_order + 1, 2, samples))
-
-        # grab limit-cycle orbit
-        y[0] = sol_lc.y
+        isostable_expansion = np.zeros((isostable_expansion_order + 1, 2, samples))
+        isostable_expansion[0] = limit_cycle_solution.y
 
         if isostable_expansion_order == 0 or self._dimension != 2:
-            return sampled_period, y, extras
+            return sampled_period, isostable_expansion, extras
 
         jacobian_at_limit_cycle = self._calculate_jacobian_at_trajectory(
-            y[0], parameter_values
+            isostable_expansion[0], parameter_values
         )
         extras.update({"jacobian": jacobian_at_limit_cycle})
 
@@ -568,7 +566,7 @@ class DynamicalSystem:
         for n in range(self._dimension):
             # design the initial state
             state0 = np.zeros(2 * self._dimension)
-            state0[: self._dimension] = y[0, :, 0]
+            state0[: self._dimension] = isostable_expansion[0, :, 0]
             state0[self._dimension + n] = 1.0
 
             sol = system_o1.get_trajectories(
@@ -603,7 +601,7 @@ class DynamicalSystem:
         extras.update({"floquet_exponent_by_monodromy_matrix": kappa_monod})
         print(f"Floquet exponent (calculated by Monodromy matrix) = {kappa_monod}")
 
-        y[1] = np.array(
+        isostable_expansion[1] = np.array(
             [
                 np.exp(-kappa_trace * sampled_period[t])
                 * np.matmul(fund_matrix[:, :, t], non_unity_eigenvec)
@@ -614,14 +612,14 @@ class DynamicalSystem:
         # non_unity_eigenvec) for t in range(len(Time))]).transpose()
 
         if isostable_expansion_order == 1:
-            return sampled_period, y, extras
+            return sampled_period, isostable_expansion, extras
 
         ### calculate special solution for d2 ###
 
         system_o2 = self.get_new_system_with_perturbation_variables(order=2)
 
         state0 = np.zeros(3 * self._dimension)
-        state0[: self._dimension] = y[0, :, 0]
+        state0[: self._dimension] = isostable_expansion[0, :, 0]
         state0[self._dimension : 2 * self._dimension] = non_unity_eigenvec
 
         sol = system_o2.get_trajectories(
@@ -640,7 +638,7 @@ class DynamicalSystem:
             ),
             d2_special[:, -1],
         )
-        y[2] = np.array(
+        isostable_expansion[2] = np.array(
             [
                 np.exp(-2.0 * kappa_trace * sampled_period[t])
                 * (np.matmul(fund_matrix[:, :, t], y2_data_ini[:]) + d2_special[:, t])
@@ -650,7 +648,7 @@ class DynamicalSystem:
 
         extras.update({"d2_special": d2_special})
 
-        return sampled_period, y, extras
+        return sampled_period, isostable_expansion, extras
 
     def get_isochrones_isostables(
         self, params, event, r=1e-7, t_max=None, kwargs_limit_cycle=None, **kwargs_int
