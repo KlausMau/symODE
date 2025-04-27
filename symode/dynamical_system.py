@@ -503,7 +503,7 @@ class DynamicalSystem:
         isostable_expansion_order: int = 0,
         show_results: bool = True,
         **kwargs,
-    ):
+    ) -> tuple[NDArray, NDArray, dict]:
         """
         currently only for 2D systems
         returns:
