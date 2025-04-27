@@ -550,6 +550,7 @@ class DynamicalSystem:
         transient_solution = self.get_trajectories(
             (0.0, t_eq), state0, parameter_values, t_eval=[t_eq], events=event, **kwargs
         )
+        state0_on_limit_cycle = transient_solution.y_events[0][-1]
 
         periods_between_events = [
             transient_solution.t_events[0][i] - transient_solution.t_events[0][i - 1]
@@ -570,7 +571,7 @@ class DynamicalSystem:
 
         limit_cycle_solution = self.get_trajectories(
             (0.0, period),
-            transient_solution.y_events[0][-1],
+            state0_on_limit_cycle,
             parameter_values,
             t_eval=sampled_period,
             **kwargs,
@@ -589,7 +590,7 @@ class DynamicalSystem:
         extras.update({"jacobian": jacobian_at_limit_cycle})
 
         fundamental_matrix = self._calculate_fundamental_matrix(
-            sampled_period, isostable_expansion[0, :, 0], parameter_values
+            sampled_period, state0_on_limit_cycle, parameter_values
         )
         extras.update({"fundamental_matrix": fundamental_matrix})
 
