@@ -588,35 +588,33 @@ class DynamicalSystem:
             isostable_expansion[0], parameter_values
         )
         extras.update({"jacobian": jacobian_at_limit_cycle})
+        jacobian_trace_integral = (
+                trapezoid(
+                    np.trace(jacobian_at_limit_cycle, axis1=0, axis2=1), sampled_period
+                )
+                / period
+        )
+        extras.update({"integrated_jacobian_trace": jacobian_trace_integral})
+        print(f"integral of Jacobian trace = {jacobian_trace_integral}")
 
         fundamental_matrix = self._calculate_fundamental_matrix(
             sampled_period, state0_on_limit_cycle, parameter_values
         )
         extras.update({"fundamental_matrix": fundamental_matrix})
 
+        # this is numerical unstable for large |kappa|
         # eigenvalues/-vectors of monodromy matrix (this is for N=2 only!!)
         # this selection process has to be revisited!
         eigenvals, eigenvecs = np.linalg.eig(fundamental_matrix[:, :, -1])
         non_unity_eigenvec = eigenvecs.transpose()[np.abs(eigenvals - 1) > 1e-4][0]
-
-        # this is numerical unstable for large |kappa|, consider changing to trace formula
-        kappa_trace = (
-            trapezoid(
-                np.trace(jacobian_at_limit_cycle, axis1=0, axis2=1), sampled_period
-            )
-            / period
-        )
         kappa_monod = np.log(np.min(eigenvals)) / period
-
-        extras.update({"floquet_exponent_by_trace": kappa_trace})
-        print(f"Floquet exponent (calculated by Jacobian trace)   = {kappa_trace}")
 
         extras.update({"floquet_exponent_by_monodromy_matrix": kappa_monod})
         print(f"Floquet exponent (calculated by Monodromy matrix) = {kappa_monod}")
 
         isostable_expansion[1] = np.array(
             [
-                np.exp(-kappa_trace * sampled_period[t])
+                np.exp(-jacobian_trace_integral * sampled_period[t])
                 * np.matmul(fundamental_matrix[:, :, t], non_unity_eigenvec)
                 for t in range(len(sampled_period))
             ]
@@ -646,14 +644,14 @@ class DynamicalSystem:
 
         y2_data_ini = np.matmul(
             np.linalg.inv(
-                np.exp(2.0 * kappa_trace * sampled_period[-1]) * np.eye(2)
+                np.exp(2.0 * jacobian_trace_integral * sampled_period[-1]) * np.eye(2)
                 - fundamental_matrix[:, :, -1]
             ),
             d2_special[:, -1],
         )
         isostable_expansion[2] = np.array(
             [
-                np.exp(-2.0 * kappa_trace * sampled_period[t])
+                np.exp(-2.0 * jacobian_trace_integral * sampled_period[t])
                 * (
                     np.matmul(fundamental_matrix[:, :, t], y2_data_ini[:])
                     + d2_special[:, t]
