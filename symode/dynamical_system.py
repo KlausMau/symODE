@@ -543,12 +543,13 @@ class DynamicalSystem:
             cse=True,
         )
 
-        j = np.zeros((self._dimension, self._dimension, samples))
+        jacobian_at_limit_cycle = np.zeros((self._dimension, self._dimension, samples))
 
         for period in range(samples):
-            j[:, :, period] = j_np(*y[0, :, period])
+            jacobian_at_limit_cycle[:, :, period] = j_np(*y[0, :, period])
 
-        extras.update({"jacobian": j})
+        jacobian_at_limit_cycle = self._calculate_jacobian_at_trajectory()
+        extras.update({"jacobian": jacobian_at_limit_cycle})
 
         ### calculate fundamental solution matrix ###
 
