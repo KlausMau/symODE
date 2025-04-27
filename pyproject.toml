@@ -42,3 +42,7 @@ optional = true
 jupyter = "*"
 matplotlib = "*"
 black = { version = "*", extras = ["jupyter"] }
+
+[[tool.mypy.overrides]]
+module = "sympy.*"
+ignore_missing_imports = true
