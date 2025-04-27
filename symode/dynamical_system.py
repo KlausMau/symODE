@@ -187,6 +187,25 @@ class DynamicalSystem:
             hessian.append(temp)
         return hessian
 
+    def _calculate_jacobian_at_trajectory(
+        self, trajectory: NDArray, parameter_values: NumericSubstitution
+    ) -> NDArray:
+        get_numeric_jacobian = lambdify(
+            tuple(self._variables),
+            self._jacobian.doit().subs(parameter_values),
+            cse=True,
+        )
+
+        time_samples = len(trajectory[0, :])
+        jacobian_at_limit_cycle = np.zeros(
+            (self._dimension, self._dimension, time_samples)
+        )
+
+        for t in range(time_samples):
+            jacobian_at_limit_cycle[:, :, t] = get_numeric_jacobian(*trajectory[:, t])
+
+        return jacobian_at_limit_cycle
+
     # return a new DynamicalSystem object
 
     def get_new_system_with_fixed_parameters(
@@ -535,20 +554,9 @@ class DynamicalSystem:
         if isostable_expansion_order == 0 or self._dimension != 2:
             return sampled_period, y, extras
 
-        ### calculate Jacobian at limit cycle ###
-
-        j_np = lambdify(
-            tuple(self._variables),
-            self._jacobian.doit().subs(parameter_values),
-            cse=True,
+        jacobian_at_limit_cycle = self._calculate_jacobian_at_trajectory(
+            y[0], parameter_values
         )
-
-        jacobian_at_limit_cycle = np.zeros((self._dimension, self._dimension, samples))
-
-        for period in range(samples):
-            jacobian_at_limit_cycle[:, :, period] = j_np(*y[0, :, period])
-
-        jacobian_at_limit_cycle = self._calculate_jacobian_at_trajectory()
         extras.update({"jacobian": jacobian_at_limit_cycle})
 
         ### calculate fundamental solution matrix ###
@@ -582,7 +590,12 @@ class DynamicalSystem:
         non_unity_eigenvec = eigenvecs.transpose()[np.abs(eigenvals - 1) > 1e-4][0]
 
         # this is numerical unstable for large |kappa|, consider changing to trace formula
-        kappa_trace = trapezoid(np.trace(j, axis1=0, axis2=1), sampled_period) / period
+        kappa_trace = (
+            trapezoid(
+                np.trace(jacobian_at_limit_cycle, axis1=0, axis2=1), sampled_period
+            )
+            / period
+        )
         kappa_monod = np.log(np.min(eigenvals)) / period
 
         extras.update({"floquet_exponent_by_trace": kappa_trace})
@@ -856,29 +869,26 @@ class DynamicalSystem:
         return output
 
     def get_time_averaged_jacobian(
-        self, t_span, state0, parameter_values: SymbolicSubstitution, **kwargs
+        self, t_span, state0, parameter_values: NumericSubstitution, **kwargs
     ):
         """returns the time-averaged Jacobian matrix of the system"""
 
-        lambidified_jacobian = lambdify(
-            tuple(self._variables),
-            self._jacobian.doit().subs(parameter_values),
-            cse=True,
+        solution = self.get_trajectories(t_span, state0, parameter_values, **kwargs)
+        jacobian_at_trajectory = self._calculate_jacobian_at_trajectory(
+            solution.y, parameter_values
         )
-
-        trajectory = self.get_trajectories(t_span, state0, parameter_values, **kwargs)
+        total_time = solution.t[-1] - solution.t[0]
 
         time_averaged_jacobian = np.zeros(
-            (self._dimension, self._dimension, len(trajectory.t))
+            (self._dimension, self._dimension, len(solution.t))
         )
 
         for i, j in itertools.product(range(self._dimension), range(self._dimension)):
-            matrix_entry_trajectory = [
-                lambidified_jacobian(*trajectory.y[:, t])[i, j]
-                for t in range(len(trajectory.t))
-            ]
-            time_averaged_jacobian[i, j] = cumulative_trapezoid(
-                matrix_entry_trajectory, trajectory.t, initial=0
-            ) / (trajectory.t[-1] - trajectory.t[0])
+            time_averaged_jacobian[i, j] = (
+                cumulative_trapezoid(
+                    jacobian_at_trajectory[i, j], solution.t, initial=0
+                )
+                / total_time
+            )
 
         return time_averaged_jacobian

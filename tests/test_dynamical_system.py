@@ -56,9 +56,24 @@ def test_get_limit_cycle(test_system_stuart_landau):
     event.direction = -1
 
     _, _, extras = test_system_stuart_landau.get_limit_cycle(
-        {}, event, np.array([0, 1])
+        {}, event, np.array([0, 1]), isostable_expansion_order=1
     )
 
     tolerance = 1e-7
 
-    assert np.abs(extras["circular_frequency"] - 1.0) < tolerance
+    expected_circular_frequency = 1
+    assert (
+        np.abs(extras["circular_frequency"] - expected_circular_frequency) < tolerance
+    )
+
+    expected_floquet_exponent = -2
+    assert (
+        np.abs(extras["floquet_exponent_by_trace"] - expected_floquet_exponent)
+        < tolerance
+    )
+    assert (
+        np.abs(
+            extras["floquet_exponent_by_monodromy_matrix"] - expected_floquet_exponent
+        )
+        < tolerance
+    )
