@@ -15,8 +15,9 @@ from scipy.integrate import solve_ivp, trapezoid, cumulative_trapezoid
 from sympy.utilities import lambdify
 from symode import systems_catalogue
 
-NumericSubstitution = NewType('NumericSubstitution', dict[sy.Symbol , float])
-SymbolicSubstitution = NewType('SymbolicSubstitution', dict[sy.Symbol , sy.Expr])
+NumericSubstitution = NewType("NumericSubstitution", dict[sy.Symbol, float])
+SymbolicSubstitution = NewType("SymbolicSubstitution", dict[sy.Symbol, sy.Expr])
+
 
 def get_dynamical_equations_from_catalogue(name: str, **params) -> SymbolicSubstitution:
     """returns a dynamical equations dictionary if "name" is found in the catalogue"""
@@ -188,7 +189,9 @@ class DynamicalSystem:
 
     # return a new DynamicalSystem object
 
-    def get_new_system_with_fixed_parameters(self, parameter_values: SymbolicSubstitution):
+    def get_new_system_with_fixed_parameters(
+        self, parameter_values: SymbolicSubstitution
+    ):
         """returns a new dynamical system with fixed parameter values"""
         new_system = DynamicalSystem(self._dynamical_equations)
         new_system.set_parameter_value(parameter_values)
