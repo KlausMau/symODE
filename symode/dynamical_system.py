@@ -589,10 +589,10 @@ class DynamicalSystem:
         )
         extras.update({"jacobian": jacobian_at_limit_cycle})
         jacobian_trace_integral = (
-                trapezoid(
-                    np.trace(jacobian_at_limit_cycle, axis1=0, axis2=1), sampled_period
-                )
-                / period
+            trapezoid(
+                np.trace(jacobian_at_limit_cycle, axis1=0, axis2=1), sampled_period
+            )
+            / period
         )
         extras.update({"jacobian_trace_integral": jacobian_trace_integral})
         print(f"integral of Jacobian trace = {jacobian_trace_integral}")
