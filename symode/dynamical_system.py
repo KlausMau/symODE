@@ -534,7 +534,6 @@ class DynamicalSystem:
 
         ### calculate Jacobian at limit cycle ###
 
-        self._calculate_jacobian()
         j_np = lambdify(
             tuple(self._variables),
             self._jacobian.doit().subs(parameter_values),
