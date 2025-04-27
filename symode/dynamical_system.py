@@ -501,7 +501,6 @@ class DynamicalSystem:
         t_eq: float = 100,
         samples: int = 1000,
         isostable_expansion_order: int = 0,
-        show_results: bool = True,
         **kwargs,
     ) -> tuple[NDArray, NDArray, dict]:
         """
@@ -527,13 +526,11 @@ class DynamicalSystem:
 
         period = sol_eq.t_events[0][-1] - sol_eq.t_events[0][-2]
         extras.update({"period": period})
+        print(f"period = {period}")
 
         circular_frequency = 2 * np.pi / period
         extras.update({"circular_frequency": circular_frequency})
-
-        if show_results is True:
-            print(f"period = {period}")
-            print(f"frequency = {circular_frequency}")
+        print(f"frequency = {circular_frequency}")
 
         sampled_period = np.linspace(0, period, samples)
 
@@ -599,7 +596,10 @@ class DynamicalSystem:
         kappa_monod = np.log(np.min(eigenvals)) / period
 
         extras.update({"floquet_exponent_by_trace": kappa_trace})
+        print(f"Floquet exponent (calculated by Jacobian trace)   = {kappa_trace}")
+
         extras.update({"floquet_exponent_by_monodromy_matrix": kappa_monod})
+        print(f"Floquet exponent (calculated by Monodromy matrix) = {kappa_monod}")
 
         y[1] = np.array(
             [
@@ -647,12 +647,6 @@ class DynamicalSystem:
         ).transpose()
 
         extras.update({"d2_special": d2_special})
-
-        if show_results is True:
-            print(f"period = {period}")
-            print(f"frequency = {circular_frequency}")
-            print(f"Floquet exponent (calculated by Jacobian trace)   = {kappa_trace}")
-            print(f"Floquet exponent (calculated by Monodromy matrix) = {kappa_monod}")
 
         return sampled_period, y, extras
 
