@@ -68,7 +68,7 @@ def test_get_limit_cycle(test_system_stuart_landau):
 
     expected_floquet_exponent = -2
     assert (
-        np.abs(extras["floquet_exponent_by_trace"] - expected_floquet_exponent)
+        np.abs(extras["jacobian_trace_integral"] - expected_floquet_exponent)
         < tolerance
     )
     assert (

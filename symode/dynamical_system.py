@@ -594,7 +594,7 @@ class DynamicalSystem:
                 )
                 / period
         )
-        extras.update({"integrated_jacobian_trace": jacobian_trace_integral})
+        extras.update({"jacobian_trace_integral": jacobian_trace_integral})
         print(f"integral of Jacobian trace = {jacobian_trace_integral}")
 
         fundamental_matrix = self._calculate_fundamental_matrix(
