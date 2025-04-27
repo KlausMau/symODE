@@ -514,17 +514,19 @@ class DynamicalSystem:
         """
         event.terminal = False
         extras = {}
-
-        # get to equilibrium
-        sol_eq = self.get_trajectories(
+        
+        transient_solution = self.get_trajectories(
             (0.0, t_eq), state0, parameter_values, t_eval=[t_eq], events=event, **kwargs
         )
 
-        # integrate from last event one period
-        # for i in range(1, len(sol_eq.t_events[0])):
-        #    print(sol_eq.t_events[0][i]-sol_eq.t_events[0][i-1])
+        periods_between_events = [
+            transient_solution.t_events[0][i] - transient_solution.t_events[0][i - 1]
+            for i in range(1, len(transient_solution.t_events[0]))
+        ]
+        for period_between_events in periods_between_events:
+            print(period_between_events)
 
-        period = sol_eq.t_events[0][-1] - sol_eq.t_events[0][-2]
+        period = periods_between_events[-1]
         extras.update({"period": period})
         print(f"period = {period}")
 
@@ -536,7 +538,7 @@ class DynamicalSystem:
 
         sol_lc = self.get_trajectories(
             (0.0, period),
-            sol_eq.y_events[0][-1],
+            transient_solution.y_events[0][-1],
             parameter_values,
             t_eval=sampled_period,
             **kwargs,
