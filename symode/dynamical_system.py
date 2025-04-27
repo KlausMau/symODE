@@ -560,8 +560,10 @@ class DynamicalSystem:
 
         system_o1 = self.get_new_system_with_perturbation_variables(order=1)
 
-        fund_matrix = np.zeros((self._dimension, self._dimension, len(sampled_period)))
-        fund_matrix[:, :, 0] = np.eye(self._dimension)
+        fundamental_matrix = np.zeros(
+            (self._dimension, self._dimension, len(sampled_period))
+        )
+        fundamental_matrix[:, :, 0] = np.eye(self._dimension)
 
         for n in range(self._dimension):
             # design the initial state
@@ -577,13 +579,13 @@ class DynamicalSystem:
                 **kwargs,
             )
 
-            fund_matrix[:, n, :] = sol.y[self._dimension :, :]
+            fundamental_matrix[:, n, :] = sol.y[self._dimension :, :]
 
-        extras.update({"fundamental_matrix": fund_matrix})
+        extras.update({"fundamental_matrix": fundamental_matrix})
 
         # eigenvalues/-vectors of monodromy matrix (this is for N=2 only!!)
         # this selection process has to be revisited!
-        eigenvals, eigenvecs = np.linalg.eig(fund_matrix[:, :, -1])
+        eigenvals, eigenvecs = np.linalg.eig(fundamental_matrix[:, :, -1])
         non_unity_eigenvec = eigenvecs.transpose()[np.abs(eigenvals - 1) > 1e-4][0]
 
         # this is numerical unstable for large |kappa|, consider changing to trace formula
@@ -604,7 +606,7 @@ class DynamicalSystem:
         isostable_expansion[1] = np.array(
             [
                 np.exp(-kappa_trace * sampled_period[t])
-                * np.matmul(fund_matrix[:, :, t], non_unity_eigenvec)
+                * np.matmul(fundamental_matrix[:, :, t], non_unity_eigenvec)
                 for t in range(len(sampled_period))
             ]
         ).transpose()
@@ -634,14 +636,17 @@ class DynamicalSystem:
         y2_data_ini = np.matmul(
             np.linalg.inv(
                 np.exp(2.0 * kappa_trace * sampled_period[-1]) * np.eye(2)
-                - fund_matrix[:, :, -1]
+                - fundamental_matrix[:, :, -1]
             ),
             d2_special[:, -1],
         )
         isostable_expansion[2] = np.array(
             [
                 np.exp(-2.0 * kappa_trace * sampled_period[t])
-                * (np.matmul(fund_matrix[:, :, t], y2_data_ini[:]) + d2_special[:, t])
+                * (
+                    np.matmul(fundamental_matrix[:, :, t], y2_data_ini[:])
+                    + d2_special[:, t]
+                )
                 for t in range(len(sampled_period))
             ]
         ).transpose()
