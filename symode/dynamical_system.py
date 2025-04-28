@@ -9,7 +9,7 @@ import numpy as np
 import sympy as sy
 import numba as nb
 
-from typing import NewType
+from typing import NewType, Literal
 from numpy.typing import NDArray
 from scipy.integrate import solve_ivp, trapezoid, cumulative_trapezoid
 from sympy.utilities import lambdify
@@ -578,7 +578,7 @@ class DynamicalSystem:
         state0: NDArray,
         t_eq: float = 100,
         samples: int = 1000,
-        isostable_expansion_order: int = 0,
+        isostable_expansion_order: Literal[0, 1, 2] = 0,
         **kwargs,
     ) -> tuple[NDArray, NDArray, dict]:
         """
