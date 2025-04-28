@@ -651,17 +651,17 @@ class DynamicalSystem:
         # this is numerical unstable for large |kappa|
         # eigenvalues/-vectors of monodromy matrix (this is for N=2 only!!)
         # this selection process has to be revisited!
-        eigenvals, eigenvecs = np.linalg.eig(fundamental_matrix[:, :, -1])
-        non_unity_eigenvec = eigenvecs.transpose()[np.abs(eigenvals - 1) > 1e-4][0]
-        floquet_exponent = np.log(np.min(eigenvals)) / period
+        eigenvalues, eigenvectors = np.linalg.eig(fundamental_matrix[:, :, -1])
+        floquet_eigenvectors = eigenvectors.transpose()
+        floquet_exponents = np.log(np.abs(eigenvalues)) / period
 
-        extras.update({"floquet_exponent": floquet_exponent})
-        print(f"Floquet exponent = {floquet_exponent}")
+        extras.update({"floquet_exponents": floquet_exponents})
+        print(f"Floquet exponents = {floquet_exponents}")
 
         isostable_expansion[1] = np.array(
             [
                 np.exp(-jacobian_trace_integral * sampled_period[t])
-                * np.matmul(fundamental_matrix[:, :, t], non_unity_eigenvec)
+                * np.matmul(fundamental_matrix[:, :, t], floquet_eigenvectors)
                 for t in range(len(sampled_period))
             ]
         ).transpose()
@@ -676,7 +676,7 @@ class DynamicalSystem:
             state0_on_limit_cycle,
             fundamental_matrix,
             jacobian_trace_integral,
-            non_unity_eigenvec,
+            floquet_eigenvectors,
             parameter_values,
         )
 
