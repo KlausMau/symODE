@@ -653,10 +653,10 @@ class DynamicalSystem:
         # this selection process has to be revisited!
         eigenvals, eigenvecs = np.linalg.eig(fundamental_matrix[:, :, -1])
         non_unity_eigenvec = eigenvecs.transpose()[np.abs(eigenvals - 1) > 1e-4][0]
-        kappa_monod = np.log(np.min(eigenvals)) / period
+        floquet_exponent = np.log(np.min(eigenvals)) / period
 
-        extras.update({"floquet_exponent_by_monodromy_matrix": kappa_monod})
-        print(f"Floquet exponent (calculated by Monodromy matrix) = {kappa_monod}")
+        extras.update({"floquet_exponent": floquet_exponent})
+        print(f"Floquet exponent = {floquet_exponent}")
 
         isostable_expansion[1] = np.array(
             [
