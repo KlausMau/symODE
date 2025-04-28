@@ -238,6 +238,52 @@ class DynamicalSystem:
 
         return fundamental_matrix
 
+    def _calculate_isostable_expansion_o2(
+        self,
+        time_instances: NDArray,
+        state0_on_limit_cycle: NDArray,
+        fundamental_matrix: NDArray,
+        floquet_exponent: float,
+        floquet_eigenvector: NDArray,
+        parameter_values: NumericSubstitution,
+    ) -> NDArray:
+        system_o2 = self.get_new_system_with_perturbation_variables(order=2)
+
+        state0_o2 = np.zeros(3 * self._dimension)
+        state0_o2[: self._dimension] = state0_on_limit_cycle
+        state0_o2[self._dimension : 2 * self._dimension] = floquet_eigenvector
+
+        solution_o2 = system_o2.get_trajectories(
+            (0, time_instances[-1]),
+            state0_o2,
+            parameter_values,
+            t_eval=time_instances,
+        )
+
+        special_o2_solution = solution_o2.y[2 * self._dimension :, :]
+
+        isostable_expansion_o2_at_state0 = np.matmul(
+            np.linalg.inv(
+                np.exp(2.0 * floquet_exponent * time_instances[-1]) * np.eye(2)
+                - fundamental_matrix[:, :, -1]
+            ),
+            special_o2_solution[:, -1],
+        )
+        isostable_expansion_o2 = np.array(
+            [
+                np.exp(-2.0 * floquet_exponent * time_instance)
+                * (
+                    np.matmul(
+                        fundamental_matrix[:, :, t], isostable_expansion_o2_at_state0[:]
+                    )
+                    + special_o2_solution[:, t]
+                )
+                for t, time_instance in enumerate(time_instances)
+            ]
+        ).transpose()
+
+        return isostable_expansion_o2
+
     # return a new DynamicalSystem object
 
     def get_new_system_with_fixed_parameters(
@@ -625,42 +671,14 @@ class DynamicalSystem:
         if isostable_expansion_order == 1:
             return sampled_period, isostable_expansion, extras
 
-        ### calculate special solution for d2 ###
-
-        system_o2 = self.get_new_system_with_perturbation_variables(order=2)
-
-        state0_o2 = np.zeros(3 * self._dimension)
-        state0_o2[: self._dimension] = isostable_expansion[0, :, 0]
-        state0_o2[self._dimension : 2 * self._dimension] = non_unity_eigenvec
-
-        solution_o2 = system_o2.get_trajectories(
-            t_span=(0, sampled_period[-1]),
-            t_eval=sampled_period,
-            state0=state0_o2,
-            parameter_values=parameter_values,
+        isostable_expansion[2] = self._calculate_isostable_expansion_o2(
+            sampled_period,
+            state0_on_limit_cycle,
+            fundamental_matrix,
+            jacobian_trace_integral,
+            non_unity_eigenvec,
+            parameter_values,
         )
-
-        d2_special = solution_o2.y[2 * self._dimension :, :]
-
-        y2_data_ini = np.matmul(
-            np.linalg.inv(
-                np.exp(2.0 * jacobian_trace_integral * sampled_period[-1]) * np.eye(2)
-                - fundamental_matrix[:, :, -1]
-            ),
-            d2_special[:, -1],
-        )
-        isostable_expansion[2] = np.array(
-            [
-                np.exp(-2.0 * jacobian_trace_integral * sampled_period[t])
-                * (
-                    np.matmul(fundamental_matrix[:, :, t], y2_data_ini[:])
-                    + d2_special[:, t]
-                )
-                for t in range(len(sampled_period))
-            ]
-        ).transpose()
-
-        extras.update({"d2_special": d2_special})
 
         return sampled_period, isostable_expansion, extras
 
