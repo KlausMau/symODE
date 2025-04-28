@@ -629,18 +629,18 @@ class DynamicalSystem:
 
         system_o2 = self.get_new_system_with_perturbation_variables(order=2)
 
-        state0 = np.zeros(3 * self._dimension)
-        state0[: self._dimension] = isostable_expansion[0, :, 0]
-        state0[self._dimension : 2 * self._dimension] = non_unity_eigenvec
+        state0_o2 = np.zeros(3 * self._dimension)
+        state0_o2[: self._dimension] = isostable_expansion[0, :, 0]
+        state0_o2[self._dimension : 2 * self._dimension] = non_unity_eigenvec
 
-        sol = system_o2.get_trajectories(
+        solution_o2 = system_o2.get_trajectories(
             t_span=(0, sampled_period[-1]),
             t_eval=sampled_period,
-            state0=state0,
+            state0=state0_o2,
             parameter_values=parameter_values,
         )
 
-        d2_special = sol.y[2 * self._dimension :, :]
+        d2_special = solution_o2.y[2 * self._dimension :, :]
 
         y2_data_ini = np.matmul(
             np.linalg.inv(
