@@ -5,11 +5,12 @@ differential equations.
 
 import copy
 import itertools
+from typing import NewType, Literal
+
 import numpy as np
 import sympy as sy
 import numba as nb
 
-from typing import NewType, Literal
 from numpy.typing import NDArray
 from scipy.integrate import solve_ivp, trapezoid, cumulative_trapezoid
 from sympy.utilities import lambdify
