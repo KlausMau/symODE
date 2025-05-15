@@ -9,9 +9,7 @@ parameter = sy.symbols("p")
 
 @pytest.fixture
 def test_system() -> DynamicalSystem:
-    system = DynamicalSystem(
-        SymbolicSubstitution({variable: parameter * variable})
-    )
+    system = DynamicalSystem(SymbolicSubstitution({variable: parameter * variable}))
     return system
 
 
