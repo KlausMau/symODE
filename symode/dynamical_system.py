@@ -330,11 +330,11 @@ class DynamicalSystem:
         ode_new = jacobian_inv * substituted_dynamical_equations
 
         # put into dictionary
-        new_dynamical_equations = SymbolicSubstitution({})
+        new_dynamical_equations = {}
         for i, x_new in enumerate(new_variables):
             new_dynamical_equations[x_new] = ode_new[i].cancel()
 
-        return DynamicalSystem(new_dynamical_equations, **kwargs)
+        return DynamicalSystem(SymbolicSubstitution(new_dynamical_equations), **kwargs)
 
     def get_new_system_with_perturbation_variables(self, order: int = 1):
         """construct perturbed dynamical system up to order N
@@ -406,7 +406,7 @@ class DynamicalSystem:
         number_of_units = len(np.array(coupling_matrix)[0])
 
         # write ODEs for new indexed variables
-        new_dynamical_equation = SymbolicSubstitution({})
+        new_dynamical_equation = {}
         for i in range(number_of_units):
             indexed_symbols = get_symbols_with_index(self._variables, i + 1)
             indexed_parameters = get_symbols_with_index(non_identical_parameters, i + 1)
@@ -430,7 +430,7 @@ class DynamicalSystem:
                 # write into dictionary for new indexed variable
                 new_dynamical_equation[indexed_symbols[var]] = new_equation
 
-        return DynamicalSystem(new_dynamical_equation)
+        return DynamicalSystem(SymbolicSubstitution(new_dynamical_equation))
 
     # numerical features
 
