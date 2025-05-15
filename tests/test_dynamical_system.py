@@ -9,19 +9,19 @@ parameter = sy.symbols("p")
 
 @pytest.fixture
 def test_system() -> DynamicalSystem:
-    test_system = DynamicalSystem(
+    system = DynamicalSystem(
         SymbolicSubstitution({variable: parameter * variable})
     )
-    return test_system
+    return system
 
 
 @pytest.fixture
 def test_system_stuart_landau() -> DynamicalSystem:
-    test_system = DynamicalSystem("stuart_landau")
-    alpha, mu, omega = test_system.get_parameters()
+    system = DynamicalSystem("stuart_landau")
+    alpha, mu, omega = system.get_parameters()
     standard_params = SymbolicSubstitution({alpha: 0, mu: 1, omega: 1})
-    test_system.set_parameter_value(standard_params)
-    return test_system
+    system.set_parameter_value(standard_params)
+    return system
 
 
 def test_init(test_system):
