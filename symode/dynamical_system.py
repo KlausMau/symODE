@@ -455,7 +455,7 @@ class DynamicalSystem:
             nopython=True,
         )
 
-        def f_odeint(t, state, parameters):
+        def f_odeint(_, state, parameters):
             # combine "state" and "parameters" to new "arguments" list variable
             arguments = list(state) + list(parameters)
             return f_auto(*arguments)
