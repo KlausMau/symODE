@@ -550,7 +550,9 @@ class DynamicalSystem:
 
                 # change state
                 if state_action is None:
-                    state_action = lambda state: state
+
+                    def state_action(state):
+                        return state
 
                 # integrate with parameter values changed by the event
                 sol = self.get_trajectories(
