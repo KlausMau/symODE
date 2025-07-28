@@ -152,7 +152,7 @@ class DynamicalSystem:
 
     def get_time_derivative_of_observable(self, observable: sy.Expr) -> sy.Expr:
         """returns the time derivative of an observable"""
-        time_derivative = 0
+        time_derivative = sy.Integer(0)
         for var in self._variables:
             time_derivative = sy.Add(
                 time_derivative,
