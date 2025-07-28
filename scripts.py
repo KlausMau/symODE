@@ -5,6 +5,8 @@ def format():
 
 def lint():
     os.system("pylint ./examples/ ./symode/ ./tests")
+
+def typecheck():
     os.system("mypy .")
 
 def test():
