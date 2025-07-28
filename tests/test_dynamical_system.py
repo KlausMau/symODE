@@ -13,11 +13,20 @@ def test_system() -> DynamicalSystem:
     return system
 
 
-@pytest.fixture
-def test_system_stuart_landau() -> DynamicalSystem:
+def system_stuart_landau() -> DynamicalSystem:
     system = DynamicalSystem("stuart_landau")
     alpha, mu, omega = system.get_parameters()
-    standard_params = SymbolicSubstitution({alpha: 0, mu: 1, omega: 1})
+    standard_params = SymbolicSubstitution(
+        {alpha: sy.Integer(0), mu: sy.Rational(1 / 2), omega: sy.Integer(1)}
+    )
+    system.set_parameter_value(standard_params)
+    return system
+
+
+def system_harmonic_oscillator() -> DynamicalSystem:
+    system = DynamicalSystem("harmonic_oscillator")
+    gamma, omega = system.get_parameters()
+    standard_params = SymbolicSubstitution({gamma: sy.Integer(0), omega: sy.Integer(1)})
     system.set_parameter_value(standard_params)
     return system
 
@@ -47,31 +56,38 @@ def test_set_parameter_value(test_system):
     assert test_system._dynamical_equations == {variable: variable}
 
 
-def test_get_limit_cycle(test_system_stuart_landau):
+@pytest.mark.parametrize(
+    "system, expected_circular_frequency, expected_floquet_exponent",
+    [
+        (system_harmonic_oscillator(), 1, 0),
+        (system_stuart_landau(), 1, -0.2),
+    ],
+)
+def test_get_limit_cycle(
+    system, expected_circular_frequency, expected_floquet_exponent
+):
     def event(t, state, args):
         return state[0]
 
     event.direction = -1
 
-    _, _, extras = test_system_stuart_landau.get_limit_cycle(
-        {}, event, np.array([0, 1]), isostable_expansion_order=1
+    _, _, extras = system.get_limit_cycle(
+        {},
+        event,
+        np.array([0, 1]),
+        isostable_expansion_order=1,
     )
 
     tolerance = 1e-7
 
-    expected_circular_frequency = 1
-    assert (
-        np.abs(extras["circular_frequency"] - expected_circular_frequency) < tolerance
+    assert extras["circular_frequency"] == pytest.approx(
+        expected_circular_frequency, abs=tolerance
     )
 
-    expected_floquet_exponent = -2
-    assert (
-        np.abs(extras["jacobian_trace_integral"] - expected_floquet_exponent)
-        < tolerance
+    assert extras["jacobian_trace_integral"] == pytest.approx(
+        expected_floquet_exponent, abs=tolerance
     )
-    assert (
-        np.abs(
-            extras["floquet_exponent_by_monodromy_matrix"] - expected_floquet_exponent
-        )
-        < tolerance
+
+    assert extras["floquet_exponents"] == pytest.approx(
+        [0.0, expected_floquet_exponent], abs=tolerance
     )
