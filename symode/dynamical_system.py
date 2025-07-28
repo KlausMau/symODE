@@ -599,6 +599,10 @@ class DynamicalSystem:
         transient_solution = self.get_trajectories(
             (0.0, t_eq), state0, parameter_values, t_eval=[t_eq], events=event, **kwargs
         )
+        if transient_solution.y_events is None or transient_solution.t_events is None:
+            raise NotImplementedError(
+                "No stable limit cycle found for given system and parameter values. If you are confident that a stable limit cycle should exist, check the event function and the initial state.")
+
         state0_on_limit_cycle = transient_solution.y_events[0][-1]
 
         periods_between_events = [
