@@ -29,8 +29,7 @@ test = "scripts:test"
 optional = true
 
 [tool.poetry.group.dev.dependencies]
-black = "*"
-pylint = "*"
+ruff = "*"
 mypy = "*"
 pytest = "*"
 scipy-stubs = "*"
@@ -41,7 +40,6 @@ optional = true
 [tool.poetry.group.interactive.dependencies]
 jupyter = "*"
 matplotlib = "*"
-black = { version = "*", extras = ["jupyter"] }
 
 [[tool.mypy.overrides]]
 module = "numba.*"

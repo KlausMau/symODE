@@ -1,8 +1,6 @@
 # symODE
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.13523852.svg)](https://doi.org/10.5281/zenodo.13523852)
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![linting: pylint](https://img.shields.io/badge/linting-pylint-yellowgreen)](https://github.com/pylint-dev/pylint)
 [![Checked with mypy (inofficial badge https://github.com/python/mypy/issues/12796#issuecomment-2311686298)](https://img.shields.io/badge/type%20checked-mypy-039dfc)](https://mypy-lang.org/)
 
 Python software for the algebraic (SymPy) and numerical (SciPy) treatment of ordinary differential equations (ODEs)

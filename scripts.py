@@ -1,10 +1,10 @@
 import os
 
 def format():
-    os.system("black ./examples/ ./symode/ ./tests")
+    os.system("ruff format ./examples/ ./symode/ ./tests")
 
 def lint():
-    os.system("pylint ./examples/ ./symode/ ./tests")
+    os.system("ruff check ./examples/ ./symode/ ./tests")
 
 def typecheck():
     os.system("mypy .")
