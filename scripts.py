@@ -1,6 +1,6 @@
 import os
 
-def format():
+def fmt():
     os.system("ruff format ./examples/ ./symode/ ./tests")
 
 def lint():
