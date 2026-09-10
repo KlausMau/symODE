@@ -661,6 +661,9 @@ class DynamicalSystem:
         eigenvalues, eigenvectors = np.linalg.eig(fundamental_matrix[:, :, -1])
         floquet_eigenvectors = eigenvectors.transpose()
         floquet_exponents = np.log(np.abs(eigenvalues)) / period
+        nontrivial_index = np.argmax(np.abs(floquet_exponents))
+        floquet_exponent = floquet_exponents[nontrivial_index]
+        floquet_eigenvector = floquet_eigenvectors[nontrivial_index]
 
         extras.update({"floquet_exponents": floquet_exponents})
         print(f"Floquet exponents = {floquet_exponents}")
@@ -668,7 +671,7 @@ class DynamicalSystem:
         isostable_expansion[1] = np.array(
             [
                 np.exp(-jacobian_trace_integral * sampled_period[t])
-                * np.matmul(fundamental_matrix[:, :, t], floquet_eigenvectors)
+                * np.matmul(fundamental_matrix[:, :, t], floquet_eigenvector)
                 for t in range(len(sampled_period))
             ]
         ).transpose()
@@ -682,8 +685,8 @@ class DynamicalSystem:
             sampled_period,
             state0_on_limit_cycle,
             fundamental_matrix,
-            jacobian_trace_integral,
-            floquet_eigenvectors,
+            floquet_exponent,
+            floquet_eigenvector,
             parameter_values,
         )
 
