@@ -608,7 +608,8 @@ class DynamicalSystem:
         )
         if transient_solution.y_events is None or transient_solution.t_events is None:
             raise NotImplementedError(
-                "No stable limit cycle found for given system and parameter values. If you are confident that a stable limit cycle should exist, check the event function and the initial state.")
+                "No stable limit cycle found for given system and parameter values. If you are confident that a stable limit cycle should exist, check the event function and the initial state."
+            )
 
         state0_on_limit_cycle = transient_solution.y_events[0][-1]
 
@@ -733,14 +734,12 @@ class DynamicalSystem:
         states = {}
 
         for z, sign in enumerate([-1, 1]):
-
             states.update({sign: np.zeros((samples, len(time_samples[z]), 2))})
 
             x0 = y[0, 0] + sign * r * y[1, 0]
             y0 = y[0, 1] + sign * r * y[1, 1]
 
             for s in range(samples):
-
                 # integrate backwards in time
                 sol = system_inv.get_trajectories(
                     t_span=(0.0, time_samples[z][-1]),
@@ -872,9 +871,7 @@ class DynamicalSystem:
             def isostable_from_x(x, y, d1=d1, d2=d2, fp_np=fp_np):
                 return np.matmul(np.array([d1, d2]), (np.array([x, y]) - fp_np))
 
-            def x_from_isostable_by_a1_a2(
-                a1, a2, fp_np=fp_np, c1=c1, c2=c2
-            ):
+            def x_from_isostable_by_a1_a2(a1, a2, fp_np=fp_np, c1=c1, c2=c2):
                 """complex-conjugate eigenvalues
 
                 Parameters
