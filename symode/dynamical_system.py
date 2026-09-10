@@ -396,7 +396,7 @@ class DynamicalSystem:
     def get_new_system_with_coupling(
         self,
         coupling_function: SymbolicSubstitution,
-        coupling_matrix: sy.Matrix = sy.ones(3, 3),
+        coupling_matrix: sy.Matrix | None = None,
         non_identical_parameters=None,
     ):
         """
@@ -407,6 +407,8 @@ class DynamicalSystem:
         """
         if non_identical_parameters is None:
             non_identical_parameters = []
+        if coupling_matrix is None:
+            coupling_matrix = sy.ones(3, 3)
 
         number_of_units = len(np.array(coupling_matrix)[0])
 

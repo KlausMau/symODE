@@ -12,8 +12,10 @@ def min_sqsum(matrix, y):
 class CircularRealFunction:
     """class for circular real functions f: [0,2pi) -> R"""
 
-    def __init__(self, fourier_modes=np.array([0.0])) -> None:
+    def __init__(self, fourier_modes=None) -> None:
         """initialize a CircularRealFunction (default: zero function)"""
+        if fourier_modes is None:
+            fourier_modes = np.array([0.0])
         self._fourier_modes = np.array(fourier_modes, dtype=complex)
 
     def shift_by(self, phi0: float) -> None:
