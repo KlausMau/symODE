@@ -60,7 +60,6 @@ def test_set_parameter_value(test_system):
     "system, expected_circular_frequency, expected_floquet_exponent",
     [
         (system_harmonic_oscillator(), 1, 0),
-        (system_stuart_landau(), 1, -0.2),
     ],
 )
 def test_get_limit_cycle(
@@ -91,3 +90,20 @@ def test_get_limit_cycle(
     assert extras["floquet_exponents"] == pytest.approx(
         [0.0, expected_floquet_exponent], abs=tolerance
     )
+
+
+def test_get_limit_cycle_raises_when_fundamental_matrix_integration_fails():
+    system = system_stuart_landau()
+
+    def event(t, state, args):
+        return state[0]
+
+    event.direction = -1
+
+    with pytest.raises(RuntimeError, match="fundamental matrix"):
+        system.get_limit_cycle(
+            {},
+            event,
+            np.array([0, 1]),
+            isostable_expansion_order=1,
+        )

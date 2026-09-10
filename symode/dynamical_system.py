@@ -234,6 +234,11 @@ class DynamicalSystem:
                 t_eval=time_instances,
                 **kwargs,
             )
+            if not solution_o1.success or solution_o1.t.size != len(time_instances):
+                raise RuntimeError(
+                    "Integration of the fundamental matrix failed before the "
+                    f"full period: {solution_o1.message}"
+                )
 
             fundamental_matrix[:, n, :] = solution_o1.y[self._dimension :, :]
 
@@ -630,12 +635,15 @@ class DynamicalSystem:
             **kwargs,
         )
 
-        # prepare return array
         isostable_expansion = np.zeros((isostable_expansion_order + 1, 2, samples))
         isostable_expansion[0] = limit_cycle_solution.y
 
         if isostable_expansion_order == 0 or self._dimension != 2:
             return sampled_period, isostable_expansion, extras
+
+        fundamental_matrix = self._calculate_fundamental_matrix(
+            sampled_period, state0_on_limit_cycle, parameter_values
+        )
 
         jacobian_at_limit_cycle = self._calculate_jacobian_at_trajectory(
             isostable_expansion[0], parameter_values
@@ -650,9 +658,6 @@ class DynamicalSystem:
         extras.update({"jacobian_trace_integral": jacobian_trace_integral})
         print(f"integral of Jacobian trace = {jacobian_trace_integral}")
 
-        fundamental_matrix = self._calculate_fundamental_matrix(
-            sampled_period, state0_on_limit_cycle, parameter_values
-        )
         extras.update({"fundamental_matrix": fundamental_matrix})
 
         # this is numerical unstable for large |kappa|
