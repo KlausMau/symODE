@@ -24,6 +24,7 @@ build-backend = "hatchling.build"
 fmt = "scripts:fmt"
 lint = "scripts:lint"
 test = "scripts:test"
+all-checks = "scripts:all_checks"
 
 [dependency-groups]
 dev = [

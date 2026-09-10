@@ -25,6 +25,7 @@ Run formatting, linting, and tests with:
 uv run fmt
 uv run lint
 uv run test
+uv run all-checks
 ```
 
 ## Backlog

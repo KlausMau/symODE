@@ -1,14 +1,19 @@
 import os
+import subprocess
 
 
 def fmt():
     os.system("ruff format ./examples/ ./symode/ ./tests")
 
 def lint():
-    os.system("ruff check ./examples/ ./symode/ ./tests")
-
+    subprocess.run(["ruff", "check"], check=True)
+    
 def typecheck():
     os.system("mypy .")
 
 def test():
-    os.system("pytest -v -ra")
+    subprocess.run(["pytest", "-v", "-ra"], check=True)
+
+def all_checks():
+    lint()
+    test()
