@@ -869,10 +869,12 @@ class DynamicalSystem:
             d2 = d2_raw / np.dot(c2, d2_raw)
 
             # construct map
-            def isostable_from_x(x, y):
+            def isostable_from_x(x, y, d1=d1, d2=d2, fp_np=fp_np):
                 return np.matmul(np.array([d1, d2]), (np.array([x, y]) - fp_np))
 
-            def x_from_isostable_by_a1_a2(a1, a2):
+            def x_from_isostable_by_a1_a2(
+                a1, a2, fp_np=fp_np, c1=c1, c2=c2
+            ):
                 """complex-conjugate eigenvalues
 
                 Parameters
@@ -886,7 +888,7 @@ class DynamicalSystem:
 
                 return fp_np + c1 * a1 + c2 * a2
 
-            def x_from_isostable_by_r_psi(r, psi):
+            def x_from_isostable_by_r_psi(r, psi, fp_np=fp_np, c1=c1):
                 """complex-conjugate eigenvalues
 
                 Parameters
