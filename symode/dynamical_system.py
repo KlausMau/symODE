@@ -5,15 +5,15 @@ differential equations.
 
 import copy
 import itertools
-from typing import NewType, Literal
+from typing import Literal, NewType
 
+import numba as nb
 import numpy as np
 import sympy as sy
-import numba as nb
-
 from numpy.typing import NDArray
-from scipy.integrate import solve_ivp, trapezoid, cumulative_trapezoid
+from scipy.integrate import cumulative_trapezoid, solve_ivp, trapezoid
 from sympy.utilities import lambdify
+
 from symode import systems_catalogue
 
 NumericSubstitution = NewType("NumericSubstitution", dict[sy.Symbol, float])
@@ -127,7 +127,7 @@ class DynamicalSystem:
 
         if jacobian is True:
             for i, fp in enumerate(fixed_points):
-                fixed_points[i].update({"Jacobian": self._jacobian.doit().subs(fp)})
+                fp.update({"Jacobian": self._jacobian.doit().subs(fp)})
 
         return fixed_points
 

@@ -1,5 +1,6 @@
 import os
 
+
 def fmt():
     os.system("ruff format ./examples/ ./symode/ ./tests")
 

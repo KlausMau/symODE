@@ -1,6 +1,7 @@
+import numpy as np
 import pytest
 import sympy as sy
-import numpy as np
+
 from symode.dynamical_system import DynamicalSystem, SymbolicSubstitution
 
 variable = sy.symbols("x")

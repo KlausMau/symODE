@@ -1,8 +1,9 @@
 """This module contains utility functions."""
 
 import sympy as sy
-from symode.dynamical_system import DynamicalSystem
+
 from symode.componentwise_expression import ComponentwiseExpression
+from symode.dynamical_system import DynamicalSystem
 
 
 def update_solution(
