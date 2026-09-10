@@ -5,6 +5,28 @@
 
 Python software for the algebraic (SymPy) and numerical (SciPy) treatment of ordinary differential equations (ODEs)
 
+## Development
+
+Install the default development dependencies with:
+
+```sh
+uv sync
+```
+
+Install the optional interactive dependencies with:
+
+```sh
+uv sync --group interactive
+```
+
+Run formatting, linting, and tests with:
+
+```sh
+uv run fmt
+uv run lint
+uv run test
+```
+
 ## Backlog
 
 - CD with GitHub actions
