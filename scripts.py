@@ -3,7 +3,7 @@ import subprocess
 
 def fmt():
     subprocess.run(
-        ["ruff", "format", "--check", "./examples/", "./symode/", "./tests/"],
+        ["ruff", "format", "--check", "."],
         check=True,
     )
 
