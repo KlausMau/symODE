@@ -1,4 +1,3 @@
-import os
 import subprocess
 
 
@@ -14,7 +13,7 @@ def lint():
 
 
 def typecheck():
-    os.system("mypy .")
+    subprocess.run(["mypy", "."], check=True)
 
 
 def test():
@@ -24,4 +23,5 @@ def test():
 def all_checks():
     fmt()
     lint()
+    typecheck()
     test()
