@@ -676,13 +676,15 @@ class DynamicalSystem:
         extras.update({"floquet_exponents": floquet_exponents})
         print(f"Floquet exponents = {floquet_exponents}")
 
-        isostable_expansion[1] = np.array(
-            [
-                np.exp(-jacobian_trace_integral * sampled_period[t])
-                * np.matmul(fundamental_matrix[:, :, t], floquet_eigenvector)
-                for t in range(len(sampled_period))
-            ]
-        ).transpose()
+        isostable_expansion[1] = np.real(
+            np.array(
+                [
+                    np.exp(-jacobian_trace_integral * sampled_period[t])
+                    * np.matmul(fundamental_matrix[:, :, t], floquet_eigenvector)
+                    for t in range(len(sampled_period))
+                ]
+            ).transpose()
+        )
         # y[1] = np.array([np.power(np.min(w),-Time[t]/Time[-1])*np.matmul(fund_matrix[:,:,t],
         # non_unity_eigenvec) for t in range(len(Time))]).transpose()
 
