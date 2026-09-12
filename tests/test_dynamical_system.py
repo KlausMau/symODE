@@ -1,3 +1,4 @@
+from types import SimpleNamespace
 from unittest.mock import Mock
 
 import numpy as np
@@ -11,26 +12,18 @@ parameter = sy.symbols("p")
 
 
 @pytest.fixture
-def test_system() -> DynamicalSystem:
-    system = DynamicalSystem(SymbolicSubstitution({variable: parameter * variable}))
-    return system
+def numerics_adapter() -> Mock:
+    adapter = Mock()
+    adapter.create_initial_value_problem_solver.return_value = Mock()
+    return adapter
 
 
-def system_stuart_landau() -> DynamicalSystem:
-    system = DynamicalSystem("stuart_landau")
-    alpha, mu, omega = system.get_parameters()
-    standard_params = SymbolicSubstitution(
-        {alpha: sy.Integer(0), mu: sy.Rational(1 / 2), omega: sy.Integer(1)}
+@pytest.fixture
+def test_system(numerics_adapter) -> DynamicalSystem:
+    system = DynamicalSystem(
+        SymbolicSubstitution({variable: parameter * variable}),
+        numerics_adapter=numerics_adapter,
     )
-    system.set_parameter_value(standard_params)
-    return system
-
-
-def system_harmonic_oscillator() -> DynamicalSystem:
-    system = DynamicalSystem("harmonic_oscillator")
-    gamma, omega = system.get_parameters()
-    standard_params = SymbolicSubstitution({gamma: sy.Integer(0), omega: sy.Integer(1)})
-    system.set_parameter_value(standard_params)
     return system
 
 
@@ -95,15 +88,54 @@ def test_get_trajectories_delegates_to_numerical_solver():
     )
 
 
-@pytest.mark.parametrize(
-    "system, expected_circular_frequency, expected_floquet_exponent",
-    [
-        (system_harmonic_oscillator(), 1, 0),
-    ],
-)
-def test_get_limit_cycle(
-    system, expected_circular_frequency, expected_floquet_exponent
-):
+def test_get_limit_cycle(numerics_adapter):
+    period = 2 * np.pi
+    samples = 1000
+    sampled_period = np.linspace(0, period, samples)
+    first_fundamental_matrix_solution = np.zeros((4, samples))
+    first_fundamental_matrix_solution[2] = 1.0
+    second_fundamental_matrix_solution = np.zeros((4, samples))
+    second_fundamental_matrix_solution[3] = 1.0
+
+    transient_solution = SimpleNamespace(
+        y_events=[np.array([[1.0, 0.0]])],
+        t_events=[np.array([0.0, period])],
+    )
+    limit_cycle_solution = SimpleNamespace(
+        y=np.vstack((np.cos(sampled_period), np.sin(sampled_period)))
+    )
+    first_fundamental_matrix_solution = SimpleNamespace(
+        success=True,
+        t=sampled_period,
+        y=first_fundamental_matrix_solution,
+        message="",
+    )
+    second_fundamental_matrix_solution = SimpleNamespace(
+        success=True,
+        t=sampled_period,
+        y=second_fundamental_matrix_solution,
+        message="",
+    )
+    initial_value_problem_solver = (
+        numerics_adapter.create_initial_value_problem_solver.return_value
+    )
+    initial_value_problem_solver.solve.side_effect = [
+        transient_solution,
+        limit_cycle_solution,
+        first_fundamental_matrix_solution,
+        second_fundamental_matrix_solution,
+    ]
+    numerics_adapter.integrate_trapezoid.return_value = 0.0
+    system = DynamicalSystem(
+        SymbolicSubstitution(
+            {
+                sy.symbols("x"): sy.symbols("y"),
+                sy.symbols("y"): -sy.symbols("x"),
+            }
+        ),
+        numerics_adapter=numerics_adapter,
+    )
+
     def event(t, state, args):
         return state[0]
 
@@ -114,25 +146,54 @@ def test_get_limit_cycle(
         event,
         np.array([0, 1]),
         isostable_expansion_order=1,
+        samples=samples,
     )
 
     tolerance = 1e-7
 
-    assert extras["circular_frequency"] == pytest.approx(
-        expected_circular_frequency, abs=tolerance
+    assert extras["circular_frequency"] == pytest.approx(1, abs=tolerance)
+
+    assert extras["jacobian_trace_integral"] == pytest.approx(0, abs=tolerance)
+
+    assert extras["floquet_exponents"] == pytest.approx([0.0, 0.0], abs=tolerance)
+
+
+def test_get_limit_cycle_raises_when_fundamental_matrix_integration_fails(
+    numerics_adapter,
+):
+    period = 2 * np.pi
+    samples = 1000
+    sampled_period = np.linspace(0, period, samples)
+    transient_solution = SimpleNamespace(
+        y_events=[np.array([[1.0, 0.0]])],
+        t_events=[np.array([0.0, period])],
     )
-
-    assert extras["jacobian_trace_integral"] == pytest.approx(
-        expected_floquet_exponent, abs=tolerance
+    limit_cycle_solution = SimpleNamespace(
+        y=np.vstack((np.cos(sampled_period), np.sin(sampled_period)))
     )
-
-    assert extras["floquet_exponents"] == pytest.approx(
-        [0.0, expected_floquet_exponent], abs=tolerance
+    failed_solution = SimpleNamespace(
+        success=False,
+        t=np.array([]),
+        y=np.empty((4, 0)),
+        message="integration failed",
     )
-
-
-def test_get_limit_cycle_raises_when_fundamental_matrix_integration_fails():
-    system = system_stuart_landau()
+    initial_value_problem_solver = (
+        numerics_adapter.create_initial_value_problem_solver.return_value
+    )
+    initial_value_problem_solver.solve.side_effect = [
+        transient_solution,
+        limit_cycle_solution,
+        failed_solution,
+    ]
+    system = DynamicalSystem(
+        SymbolicSubstitution(
+            {
+                sy.symbols("x"): sy.symbols("y"),
+                sy.symbols("y"): -sy.symbols("x"),
+            }
+        ),
+        numerics_adapter=numerics_adapter,
+    )
 
     def event(t, state, args):
         return state[0]
@@ -145,4 +206,5 @@ def test_get_limit_cycle_raises_when_fundamental_matrix_integration_fails():
             event,
             np.array([0, 1]),
             isostable_expansion_order=1,
+            samples=samples,
         )
