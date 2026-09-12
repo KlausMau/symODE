@@ -21,9 +21,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project.scripts]
-fmt = "scripts:fmt"
 autofix = "scripts:autofix"
-lint = "scripts:lint"
 test = "scripts:test"
 typecheck = "scripts:typecheck"
 all-checks = "scripts:all_checks"

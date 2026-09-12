@@ -1,22 +1,12 @@
 import subprocess
 
 
-def fmt():
-    subprocess.run(
-        ["ruff", "format", "--check", "."],
-        check=True,
-    )
+def run_ruff(arguments: list[str]):
+    subprocess.run(["ruff", *arguments], check=True)
 
 
 def autofix():
-    subprocess.run(
-        ["ruff", "format", "."],
-        check=True,
-    )
-
-
-def lint():
-    subprocess.run(["ruff", "check"], check=True)
+    run_ruff(["format", "."])
 
 
 def typecheck():
@@ -28,7 +18,7 @@ def test():
 
 
 def all_checks():
-    fmt()
-    lint()
+    run_ruff(["format", "--check", "."])
+    run_ruff(["check"])
     typecheck()
     test()
