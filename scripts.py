@@ -8,6 +8,13 @@ def fmt():
     )
 
 
+def autofix():
+    subprocess.run(
+        ["ruff", "format", "."],
+        check=True,
+    )
+
+
 def lint():
     subprocess.run(["ruff", "check"], check=True)
 

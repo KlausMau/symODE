@@ -19,12 +19,15 @@ Install the optional interactive dependencies with:
 uv sync --group interactive
 ```
 
-Run formatting, linting, and tests with:
+Apply automatically applicable fixes with:
 
 ```sh
-uv run fmt
-uv run lint
-uv run test
+uv run autofix
+```
+
+Check formatting, linting, and tests with:
+
+```sh
 uv run all-checks
 ```
 
