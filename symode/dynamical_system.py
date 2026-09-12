@@ -29,13 +29,6 @@ def get_dynamical_equations_from_catalogue(name: str, **params) -> SymbolicSubst
     return dynamical_equations_builder(**params)
 
 
-def get_symbols_with_index(
-    symbols: list[sy.Symbol], index: int
-) -> dict[sy.Symbol, sy.Symbol]:
-    """returns a mapping between symbolds and their indexed counterpart"""
-    return {symbol: sy.symbols(f"{symbol}_{index}") for symbol in symbols}
-
-
 class DynamicalSystem:
     """
     A class to deal with dynamical systems of the form
@@ -74,6 +67,12 @@ class DynamicalSystem:
 
     def __str__(self) -> str:
         return self.get_dynamical_equations_in_latex()
+
+    def _get_symbols_with_index(
+        self, symbols: list[sy.Symbol], index: int
+    ) -> dict[sy.Symbol, sy.Symbol]:
+        """returns a mapping between symbolds and their indexed counterpart"""
+        return {symbol: sy.symbols(f"{symbol}_{index}") for symbol in symbols}
 
     def _set_attributes_from_dynamical_equations(self) -> None:
         """sets the attributes of the dynamical system based on the dynamical equations"""
@@ -471,8 +470,10 @@ class DynamicalSystem:
         # write ODEs for new indexed variables
         new_dynamical_equation = {}
         for i in range(number_of_units):
-            indexed_symbols = get_symbols_with_index(self._variables, i + 1)
-            indexed_parameters = get_symbols_with_index(non_identical_parameters, i + 1)
+            indexed_symbols = self._get_symbols_with_index(self._variables, i + 1)
+            indexed_parameters = self._get_symbols_with_index(
+                non_identical_parameters, i + 1
+            )
 
             for var in self._variables:
                 # substitute variables with index
