@@ -7,14 +7,14 @@ import copy
 import itertools
 from typing import Literal, NewType
 
-import numba as nb
 import numpy as np
 import sympy as sy
 from numpy.typing import NDArray
-from scipy.integrate import cumulative_trapezoid, solve_ivp, trapezoid
+from scipy.integrate import cumulative_trapezoid, trapezoid
 from sympy.utilities import lambdify
 
 from symode import systems_catalogue
+from symode.numerical_solver import NumericalSolver
 
 NumericSubstitution = NewType("NumericSubstitution", dict[sy.Symbol, float])
 SymbolicSubstitution = NewType("SymbolicSubstitution", dict[sy.Symbol, sy.Expr])
@@ -51,7 +51,10 @@ class DynamicalSystem:
     """
 
     def __init__(
-        self, dynamical_equations: str | SymbolicSubstitution, **params
+        self,
+        dynamical_equations: str | SymbolicSubstitution,
+        numerical_solver: NumericalSolver | None = None,
+        **params,
     ) -> None:
         """
         dynamical equations are given as "str" or "dict"
@@ -67,6 +70,8 @@ class DynamicalSystem:
             )
 
         self._dynamical_equations = dynamical_equations
+        self._numerical_solver = numerical_solver
+        self._numerical_solver_is_injected = numerical_solver is not None
         self._set_attributes_from_dynamical_equations()
 
     def __str__(self) -> str:
@@ -85,7 +90,12 @@ class DynamicalSystem:
 
         self._jacobian = self._calculate_jacobian()
         self._hessian = self._calculate_hessian()
-        self._f_odeint = self._compile_integrator()
+        if not self._numerical_solver_is_injected:
+            self._numerical_solver = NumericalSolver(
+                self._dynamical_equations,
+                self._variables,
+                self._parameters,
+            )
 
     def get_dynamical_equations_in_latex(self) -> str:
         """returns the LaTeX string of the dynamical equations"""
@@ -441,34 +451,6 @@ class DynamicalSystem:
 
     # numerical features
 
-    def _compile_integrator(self):
-        """
-        compiles the integrator and returns a function with the
-        signature to fit into "scipy.integrate.solve_ivp"
-
-        Still to add and verify:
-        - add external "stimulation" as time-dependent function
-        - vectorize functions
-        - precompile "f_ODEINT" with Numba
-        """
-
-        # get numba-precompiled functions (maximum number of arguments is 255 ...)
-        f_auto = nb.jit(
-            lambdify(
-                tuple(self._variables + self._parameters),
-                tuple(self._dynamical_equations.values()),
-                cse=True,
-            ),
-            nopython=True,
-        )
-
-        def f_odeint(_, state, parameters):
-            # combine "state" and "parameters" to new "arguments" list variable
-            arguments = list(state) + list(parameters)
-            return f_auto(*arguments)
-
-        return f_odeint
-
     def get_trajectories(
         self, t_span, state0, parameter_values, max_step=0.01, **kwargs
     ):
@@ -481,20 +463,13 @@ class DynamicalSystem:
 
         """
 
-        # ordered parameter values
-        parameter_values_list = [parameter_values[p] for p in self._parameters]
-
-        # integrate with SciPy
-        states = solve_ivp(
-            self._f_odeint,
+        return self._numerical_solver.solve(
             t_span,
             state0,
-            args=(parameter_values_list,),
+            parameter_values,
             max_step=max_step,
             **kwargs,
         )
-
-        return states
 
     def get_event_based_evolution(
         self,

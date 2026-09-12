@@ -1,3 +1,5 @@
+from unittest.mock import Mock
+
 import numpy as np
 import pytest
 import sympy as sy
@@ -55,6 +57,33 @@ def test_set_parameter_value(test_system):
     assert test_system.get_parameters() == []
     assert test_system.get_variables() == [variable]
     assert test_system._dynamical_equations == {variable: variable}
+
+
+def test_get_trajectories_delegates_to_numerical_solver():
+    numerical_solver = Mock()
+    expected_solution = object()
+    numerical_solver.solve.return_value = expected_solution
+    system = DynamicalSystem(
+        SymbolicSubstitution({variable: parameter * variable}),
+        numerical_solver=numerical_solver,
+    )
+
+    solution = system.get_trajectories(
+        (0.0, 1.0),
+        np.array([1.0]),
+        {parameter: 2.0},
+        max_step=0.5,
+        rtol=1e-8,
+    )
+
+    assert solution is expected_solution
+    numerical_solver.solve.assert_called_once_with(
+        (0.0, 1.0),
+        np.array([1.0]),
+        {parameter: 2.0},
+        max_step=0.5,
+        rtol=1e-8,
+    )
 
 
 @pytest.mark.parametrize(
