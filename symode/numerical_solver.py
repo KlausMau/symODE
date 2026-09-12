@@ -6,7 +6,7 @@ from scipy.integrate import cumulative_trapezoid, solve_ivp, trapezoid
 from sympy.utilities.lambdify import lambdify
 
 
-class NumericalSolver:
+class NumericsAdapter:
     def __init__(
         self,
         dynamical_equations: dict[sy.Symbol, sy.Expr],

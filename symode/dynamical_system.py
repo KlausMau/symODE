@@ -13,7 +13,7 @@ from numpy.typing import NDArray
 from sympy.utilities import lambdify
 
 from symode import systems_catalogue
-from symode.numerical_solver import NumericalSolver
+from symode.numerical_solver import NumericsAdapter
 
 NumericSubstitution = NewType("NumericSubstitution", dict[sy.Symbol, float])
 SymbolicSubstitution = NewType("SymbolicSubstitution", dict[sy.Symbol, sy.Expr])
@@ -52,7 +52,7 @@ class DynamicalSystem:
     def __init__(
         self,
         dynamical_equations: str | SymbolicSubstitution,
-        numerical_solver: NumericalSolver | None = None,
+        numerical_solver: NumericsAdapter | None = None,
         **params,
     ) -> None:
         """
@@ -71,7 +71,7 @@ class DynamicalSystem:
         self._dynamical_equations = dynamical_equations
         self._numerical_solver_is_injected = numerical_solver is not None
         if numerical_solver is not None:
-            self._numerical_solver: NumericalSolver = numerical_solver
+            self._numerical_solver: NumericsAdapter = numerical_solver
         self._set_attributes_from_dynamical_equations()
 
     def __str__(self) -> str:
@@ -91,7 +91,7 @@ class DynamicalSystem:
         self._jacobian = self._calculate_jacobian()
         self._hessian = self._calculate_hessian()
         if not self._numerical_solver_is_injected:
-            self._numerical_solver = NumericalSolver(
+            self._numerical_solver = NumericsAdapter(
                 self._dynamical_equations,
                 self._variables,
                 self._parameters,
