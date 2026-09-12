@@ -7,6 +7,7 @@ def run_ruff(arguments: list[str]):
 
 def autofix():
     run_ruff(["format", "."])
+    run_ruff(["check", "--fix"])
 
 
 def typecheck():
