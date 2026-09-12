@@ -10,7 +10,6 @@ from typing import Literal, NewType
 import numpy as np
 import sympy as sy
 from numpy.typing import NDArray
-from scipy.integrate import cumulative_trapezoid, trapezoid
 from sympy.utilities import lambdify
 
 from symode import systems_catalogue
@@ -70,8 +69,9 @@ class DynamicalSystem:
             )
 
         self._dynamical_equations = dynamical_equations
-        self._numerical_solver = numerical_solver
         self._numerical_solver_is_injected = numerical_solver is not None
+        if numerical_solver is not None:
+            self._numerical_solver: NumericalSolver = numerical_solver
         self._set_attributes_from_dynamical_equations()
 
     def __str__(self) -> str:
@@ -628,7 +628,7 @@ class DynamicalSystem:
         )
         extras.update({"jacobian": jacobian_at_limit_cycle})
         jacobian_trace_integral = (
-            trapezoid(
+            self._numerical_solver.integrate_trapezoid(
                 np.trace(jacobian_at_limit_cycle, axis1=0, axis2=1), sampled_period
             )
             / period
@@ -901,11 +901,10 @@ class DynamicalSystem:
         time_averaged_jacobian = np.zeros(
             (self._dimension, self._dimension, len(solution.t))
         )
-
         for i, j in itertools.product(range(self._dimension), range(self._dimension)):
             time_averaged_jacobian[i, j] = (
-                cumulative_trapezoid(
-                    jacobian_at_trajectory[i, j], solution.t, initial=0
+                self._numerical_solver.integrate_cumulative_trapezoid(
+                    jacobian_at_trajectory[i, j], solution.t
                 )
                 / total_time
             )

@@ -2,7 +2,7 @@ from collections.abc import Callable
 
 import numba as nb
 import sympy as sy
-from scipy.integrate import solve_ivp
+from scipy.integrate import cumulative_trapezoid, solve_ivp, trapezoid
 from sympy.utilities.lambdify import lambdify
 
 
@@ -52,3 +52,11 @@ class NumericalSolver:
             max_step=max_step,
             **kwargs,
         )
+
+    @staticmethod
+    def integrate_trapezoid(values, time):
+        return trapezoid(values, time)
+
+    @staticmethod
+    def integrate_cumulative_trapezoid(values, time):
+        return cumulative_trapezoid(values, time, initial=0)
