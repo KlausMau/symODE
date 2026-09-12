@@ -6,6 +6,18 @@ from symode.componentwise_expression import ComponentwiseExpression
 from symode.dynamical_system import DynamicalSystem
 
 
+def get_polynomial_coefficients(
+    equations: sy.Matrix | list[sy.Expr], variables: list[sy.Symbol]
+) -> list[sy.Expr]:
+    """returns all polynomial coefficients from a sequence of equations"""
+    coefficients = set()
+    for equation in equations:
+        polynomial = sy.Poly(equation, *variables)
+        coefficients.update(polynomial.coeffs())
+
+    return list(coefficients)
+
+
 def update_solution(
     solution: dict[sy.Symbol, sy.Expr], new_solution_part: dict[sy.Symbol, sy.Expr]
 ) -> dict[sy.Symbol, sy.Expr]:

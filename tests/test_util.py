@@ -3,11 +3,20 @@ import sympy as sy
 from symode.dynamical_system import DynamicalSystem
 from symode.util import (
     find_solution_of_equation_by_inserting_values,
+    get_polynomial_coefficients,
     get_remainder_with_complex_ansatz,
     get_remainder_with_exponential_ansatz,
     get_remainder_with_rational_ansatz,
     update_solution,
 )
+
+
+def test_get_polynomial_coefficients_from_multiple_equations():
+    x, y, a, b = sy.symbols("x y a b")
+
+    coefficients = get_polynomial_coefficients([a * x**2 + b * y, x - y], [x, y])
+
+    assert set(coefficients) == {a, b, 1, -1}
 
 
 def test_update_solution_substitutes_existing_values():

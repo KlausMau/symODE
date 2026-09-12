@@ -172,6 +172,30 @@ class DynamicalSystem:
             )
         return time_derivative
 
+    def get_symmetry_equations(
+        self, ansatz: sy.Matrix | None = None
+    ) -> tuple[sy.Matrix, list[sy.Symbol]]:
+        """returns the expanded equations for a linear symmetry ansatz"""
+        if ansatz is None:
+            entries = sy.symbols(f"m0:{self._dimension * self._dimension}")
+            ansatz = sy.Matrix(self._dimension, self._dimension, entries)
+
+        unknowns = list(ansatz.free_symbols)
+        state = sy.Matrix(self._variables)
+        vector_field = sy.Matrix(
+            [self._dynamical_equations[variable] for variable in self._variables]
+        )
+
+        substitution = dict(zip(self._variables, ansatz * state))
+        vector_field_at_transformed_state = vector_field.subs(
+            substitution, simultaneous=True
+        )
+        equation_vector = sy.expand(
+            ansatz * vector_field - vector_field_at_transformed_state
+        )
+
+        return equation_vector, unknowns
+
     def _calculate_jacobian(self) -> sy.Matrix:
         """compute Jacobian matrix of system"""
         jacobian = sy.ones(self._dimension)
