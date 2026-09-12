@@ -30,9 +30,13 @@ class CircularRealFunction:
             guesses = [0.0, np.pi]
 
         # search for all arguments x0 with f(x0)=value
-        x0 = []
+        x0: list[float] = []
+
+        def equation(x: np.ndarray) -> np.ndarray:
+            return self.get_values_at(x) - value
+
         for guess in guesses:
-            roots = optimize.root(lambda x: self.get_values_at(x) - value, guess)
+            roots = optimize.root(equation, guess)
             x0.extend(roots.x)
 
         # select first that matches the direction
