@@ -23,6 +23,7 @@ build-backend = "hatchling.build"
 [project.scripts]
 autofix = "scripts:autofix"
 test = "scripts:test"
+notebooks = "scripts:notebooks"
 typecheck = "scripts:typecheck"
 all-checks = "scripts:all_checks"
 

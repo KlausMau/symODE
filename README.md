@@ -25,6 +25,12 @@ Apply automatically applicable fixes with:
 uv run autofix
 ```
 
+Execute all example notebooks with:
+
+```sh
+uv run --group interactive notebooks
+```
+
 Check formatting, linting, and tests with:
 
 ```sh
