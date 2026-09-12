@@ -61,11 +61,15 @@ def test_set_parameter_value(test_system):
 
 def test_get_trajectories_delegates_to_numerical_solver():
     numerical_solver = Mock()
+    initial_value_problem_solver = Mock()
     expected_solution = object()
-    numerical_solver.solve.return_value = expected_solution
+    numerical_solver.create_initial_value_problem_solver.return_value = (
+        initial_value_problem_solver
+    )
+    initial_value_problem_solver.solve.return_value = expected_solution
     system = DynamicalSystem(
         SymbolicSubstitution({variable: parameter * variable}),
-        numerical_solver=numerical_solver,
+        numerics_adapter=numerical_solver,
     )
 
     solution = system.get_trajectories(
@@ -77,7 +81,12 @@ def test_get_trajectories_delegates_to_numerical_solver():
     )
 
     assert solution is expected_solution
-    numerical_solver.solve.assert_called_once_with(
+    numerical_solver.create_initial_value_problem_solver.assert_called_once_with(
+        {variable: parameter * variable},
+        [variable],
+        [parameter],
+    )
+    initial_value_problem_solver.solve.assert_called_once_with(
         (0.0, 1.0),
         np.array([1.0]),
         {parameter: 2.0},

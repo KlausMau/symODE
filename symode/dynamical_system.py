@@ -52,7 +52,7 @@ class DynamicalSystem:
     def __init__(
         self,
         dynamical_equations: str | SymbolicSubstitution,
-        numerical_solver: NumericsAdapter | None = None,
+        numerics_adapter: type[NumericsAdapter] = NumericsAdapter,
         **params,
     ) -> None:
         """
@@ -69,9 +69,7 @@ class DynamicalSystem:
             )
 
         self._dynamical_equations = dynamical_equations
-        self._numerical_solver_is_injected = numerical_solver is not None
-        if numerical_solver is not None:
-            self._numerical_solver: NumericsAdapter = numerical_solver
+        self._numerics_adapter = numerics_adapter
         self._set_attributes_from_dynamical_equations()
 
     def __str__(self) -> str:
@@ -90,12 +88,13 @@ class DynamicalSystem:
 
         self._jacobian = self._calculate_jacobian()
         self._hessian = self._calculate_hessian()
-        if not self._numerical_solver_is_injected:
-            self._numerical_solver = NumericsAdapter(
+        self._numerical_solver = (
+            self._numerics_adapter.create_initial_value_problem_solver(
                 self._dynamical_equations,
                 self._variables,
                 self._parameters,
             )
+        )
 
     def get_dynamical_equations_in_latex(self) -> str:
         """returns the LaTeX string of the dynamical equations"""
@@ -306,7 +305,10 @@ class DynamicalSystem:
         self, parameter_values: SymbolicSubstitution
     ):
         """returns a new dynamical system with fixed parameter values"""
-        new_system = DynamicalSystem(self._dynamical_equations)
+        new_system = DynamicalSystem(
+            self._dynamical_equations,
+            numerics_adapter=self._numerics_adapter,
+        )
         new_system.set_parameter_value(parameter_values)
         return new_system
 
@@ -315,7 +317,10 @@ class DynamicalSystem:
         new_dynamical_equations = {}
         for var in self._variables:
             new_dynamical_equations.update({var: -self._dynamical_equations[var]})
-        return DynamicalSystem(new_dynamical_equations)
+        return DynamicalSystem(
+            new_dynamical_equations,
+            numerics_adapter=self._numerics_adapter,
+        )
 
     def get_new_system_after_transformation(
         self, new_variables, equations: SymbolicSubstitution, **kwargs
@@ -349,7 +354,11 @@ class DynamicalSystem:
         for i, x_new in enumerate(new_variables):
             new_dynamical_equations[x_new] = ode_new[i].cancel()
 
-        return DynamicalSystem(SymbolicSubstitution(new_dynamical_equations), **kwargs)
+        return DynamicalSystem(
+            SymbolicSubstitution(new_dynamical_equations),
+            numerics_adapter=self._numerics_adapter,
+            **kwargs,
+        )
 
     def get_new_system_with_perturbation_variables(self, order: int = 1):
         """construct perturbed dynamical system up to order N
@@ -362,12 +371,18 @@ class DynamicalSystem:
 
         # terms of order "0"
         if order < 0:
-            return DynamicalSystem(new_dynamical_equations)
+            return DynamicalSystem(
+                new_dynamical_equations,
+                numerics_adapter=self._numerics_adapter,
+            )
 
         new_dynamical_equations = self._dynamical_equations
 
         if order < 1:
-            return DynamicalSystem(new_dynamical_equations)
+            return DynamicalSystem(
+                new_dynamical_equations,
+                numerics_adapter=self._numerics_adapter,
+            )
 
         # add terms of order "1"
         self._calculate_jacobian()
@@ -382,7 +397,10 @@ class DynamicalSystem:
             )
 
         if order < 2:
-            return DynamicalSystem(new_dynamical_equations)
+            return DynamicalSystem(
+                new_dynamical_equations,
+                numerics_adapter=self._numerics_adapter,
+            )
 
         # add terms of order "2"
         self._calculate_hessian()
@@ -447,7 +465,10 @@ class DynamicalSystem:
                 # write into dictionary for new indexed variable
                 new_dynamical_equation[indexed_symbols[var]] = new_equation
 
-        return DynamicalSystem(SymbolicSubstitution(new_dynamical_equation))
+        return DynamicalSystem(
+            SymbolicSubstitution(new_dynamical_equation),
+            numerics_adapter=self._numerics_adapter,
+        )
 
     # numerical features
 
@@ -628,7 +649,7 @@ class DynamicalSystem:
         )
         extras.update({"jacobian": jacobian_at_limit_cycle})
         jacobian_trace_integral = (
-            self._numerical_solver.integrate_trapezoid(
+            self._numerics_adapter.integrate_trapezoid(
                 np.trace(jacobian_at_limit_cycle, axis1=0, axis2=1), sampled_period
             )
             / period
@@ -903,7 +924,7 @@ class DynamicalSystem:
         )
         for i, j in itertools.product(range(self._dimension), range(self._dimension)):
             time_averaged_jacobian[i, j] = (
-                self._numerical_solver.integrate_cumulative_trapezoid(
+                self._numerics_adapter.integrate_cumulative_trapezoid(
                     jacobian_at_trajectory[i, j], solution.t
                 )
                 / total_time
