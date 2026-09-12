@@ -124,7 +124,9 @@ class DynamicalSystem:
         """
         try:
             fixed_points = sy.solve(
-                self._dynamical_equations, self._variables, dict=True
+                list(self._dynamical_equations.values()),
+                self._variables,
+                dict=True,
             )
         except NotImplementedError:
             fixed_points = sy.nsolve(
@@ -371,7 +373,9 @@ class DynamicalSystem:
                 {var: self._dynamical_equations[var].subs(equations)}
             )
 
-        ode_new = jacobian_inv * substituted_dynamical_equations
+        ode_new = jacobian_inv * sy.Matrix(
+            [substituted_dynamical_equations[var] for var in self._variables]
+        )
 
         # put into dictionary
         new_dynamical_equations = {}
