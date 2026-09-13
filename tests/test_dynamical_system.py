@@ -59,9 +59,10 @@ def test_get_symmetry_equations_uses_full_matrix_ansatz(numerics_adapter):
         numerics_adapter=numerics_adapter,
     )
 
-    equations, unknowns = system.get_symmetry_equations()
+    entries = sy.symbols("m0:4")
+    ansatz = sy.Matrix(2, 2, entries)
+    equations = system.get_commutator_to_linear_transformation(ansatz)
 
-    assert set(unknowns) == set(sy.symbols("m0:4"))
     assert equations == {x: sy.Symbol("m1") * y, y: -sy.Symbol("m2") * x}
 
 
@@ -74,9 +75,8 @@ def test_get_symmetry_equations_respects_matrix_ansatz(numerics_adapter):
     )
     ansatz = sy.Matrix([[a, 0], [0, b]])
 
-    equations, unknowns = system.get_symmetry_equations(ansatz)
+    equations = system.get_commutator_to_linear_transformation(ansatz)
 
-    assert set(unknowns) == {a, b}
     assert equations == {x: -(a**2) * x**2 + a * x**2, y: 0}
 
 

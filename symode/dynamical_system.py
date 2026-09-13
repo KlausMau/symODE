@@ -173,31 +173,24 @@ class DynamicalSystem:
             )
         return time_derivative
 
-    def get_symmetry_equations(
-        self, ansatz: sy.Matrix | None = None
-    ) -> tuple[dict[sy.Symbol, sy.Expr], list[sy.Symbol]]:
+    def get_commutator_to_linear_transformation(
+        self, linear_transformation: sy.Matrix
+    ) -> dict[sy.Symbol, sy.Expr]:
         """returns the expanded equations for a linear symmetry ansatz"""
-        if ansatz is None:
-            entries = sy.symbols(f"m0:{self._dimension * self._dimension}")
-            ansatz = sy.Matrix(self._dimension, self._dimension, entries)
-
-        unknowns = list(ansatz.free_symbols)
-        state = sy.Matrix(self._variables)
         vector_field = sy.Matrix(
             [self._dynamical_equations[variable] for variable in self._variables]
         )
-
-        substitution = dict(zip(self._variables, ansatz * state))
+        substitution = dict(
+            zip(self._variables, linear_transformation * sy.Matrix(self._variables))
+        )
         vector_field_at_transformed_state = vector_field.subs(
             substitution, simultaneous=True
         )
         equation_vector = sy.expand(
-            ansatz * vector_field - vector_field_at_transformed_state
+            linear_transformation * vector_field - vector_field_at_transformed_state
         )
 
-        equations = dict(zip(self._variables, equation_vector))
-
-        return equations, unknowns
+        return dict(zip(self._variables, equation_vector))
 
     def _calculate_jacobian(self) -> sy.Matrix:
         """compute Jacobian matrix of system"""
