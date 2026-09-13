@@ -11,12 +11,30 @@ from symode.util import (
 )
 
 
-def test_get_polynomial_coefficients_from_multiple_equations():
+def test_get_polynomial_coefficients_from_equation():
     x, y, a, b = sy.symbols("x y a b")
 
-    coefficients = get_polynomial_coefficients([a * x**2 + b * y, x - y], [x, y])
+    coefficients = get_polynomial_coefficients(a * x**2 + b * y - 1, [x, y])
 
-    assert set(coefficients) == {a, b, 1, -1}
+    assert coefficients == {x**2: a, y: b, 1: -1}
+
+
+def test_get_polynomial_coefficients_from_equation_with_addition():
+    x, y, a, b = sy.symbols("x y a b")
+
+    coefficients = get_polynomial_coefficients(a * x**2 + b * x**2 - 1, [x, y])
+
+    assert coefficients == {x**2: a + b, 1: -1}
+
+
+def test_get_polynomial_coefficients_can_be_applied_to_multiple_equations():
+    x, y, a = sy.symbols("x y a")
+
+    coefficients = [
+        get_polynomial_coefficients(equation, [x, y]) for equation in [a * x + 3, y**2]
+    ]
+
+    assert coefficients == [{x: a, 1: 3}, {y**2: 1}]
 
 
 def test_update_solution_substitutes_existing_values():

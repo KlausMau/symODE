@@ -7,15 +7,18 @@ from symode.dynamical_system import DynamicalSystem
 
 
 def get_polynomial_coefficients(
-    equations: sy.Matrix | list[sy.Expr], variables: list[sy.Symbol]
-) -> list[sy.Expr]:
-    """returns all polynomial coefficients from a sequence of equations"""
-    coefficients = set()
-    for equation in equations:
-        polynomial = sy.Poly(equation, *variables)
-        coefficients.update(polynomial.coeffs())
+    equation: sy.Expr, variables: list[sy.Symbol]
+) -> dict[sy.Expr, sy.Expr]:
+    """Return the coefficients grouped by their associated monomial."""
+    coefficients = {}
+    polynomial = sy.Poly(equation, *variables)
+    for monomial, coefficient in polynomial.terms():
+        monomial_expression = sy.prod(
+            variable**power for variable, power in zip(variables, monomial)
+        )
+        coefficients[monomial_expression] = coefficient
 
-    return list(coefficients)
+    return coefficients
 
 
 def update_solution(
