@@ -175,7 +175,7 @@ class DynamicalSystem:
 
     def get_symmetry_equations(
         self, ansatz: sy.Matrix | None = None
-    ) -> tuple[sy.Matrix, list[sy.Symbol]]:
+    ) -> tuple[dict[sy.Symbol, sy.Expr], list[sy.Symbol]]:
         """returns the expanded equations for a linear symmetry ansatz"""
         if ansatz is None:
             entries = sy.symbols(f"m0:{self._dimension * self._dimension}")
@@ -195,7 +195,9 @@ class DynamicalSystem:
             ansatz * vector_field - vector_field_at_transformed_state
         )
 
-        return equation_vector, unknowns
+        equations = dict(zip(self._variables, equation_vector))
+
+        return equations, unknowns
 
     def _calculate_jacobian(self) -> sy.Matrix:
         """compute Jacobian matrix of system"""

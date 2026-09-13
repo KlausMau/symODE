@@ -62,7 +62,7 @@ def test_get_symmetry_equations_uses_full_matrix_ansatz(numerics_adapter):
     equations, unknowns = system.get_symmetry_equations()
 
     assert set(unknowns) == set(sy.symbols("m0:4"))
-    assert list(equations) == [sy.Symbol("m1") * y, -sy.Symbol("m2") * x]
+    assert equations == {x: sy.Symbol("m1") * y, y: -sy.Symbol("m2") * x}
 
 
 def test_get_symmetry_equations_respects_matrix_ansatz(numerics_adapter):
@@ -77,7 +77,7 @@ def test_get_symmetry_equations_respects_matrix_ansatz(numerics_adapter):
     equations, unknowns = system.get_symmetry_equations(ansatz)
 
     assert set(unknowns) == {a, b}
-    assert list(equations) == [-(a**2) * x**2 + a * x**2, 0]
+    assert equations == {x: -(a**2) * x**2 + a * x**2, y: 0}
 
 
 def test_get_trajectories_delegates_to_numerical_solver():
