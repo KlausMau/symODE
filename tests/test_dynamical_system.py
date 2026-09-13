@@ -80,6 +80,34 @@ def test_get_symmetry_equations_respects_matrix_ansatz(numerics_adapter):
     assert equations == {x: -(a**2) * x**2 + a * x**2, y: 0}
 
 
+def test_get_all_symmetries_builds_indexed_ansatz_for_any_dimension(numerics_adapter):
+    x, y, z = sy.symbols("x y z")
+    system = DynamicalSystem(
+        SymbolicSubstitution({x: x, y: 2 * y, z: 3 * z}),
+        numerics_adapter=numerics_adapter,
+    )
+
+    symmetries = system.get_all_symmetries()
+
+    assert len(symmetries) == 1
+    assert symmetries[0] == sy.diag(
+        sy.Symbol("m_0_0"), sy.Symbol("m_1_1"), sy.Symbol("m_2_2")
+    )
+
+
+def test_get_all_symmtries_van_der_pol_returns_three_symmetries():
+    system = DynamicalSystem("van_der_pol")
+
+    symmetries = system.get_all_symmetries()
+    expected_symmetries = [sy.zeros(2), sy.eye(2), -sy.eye(2)]
+
+    assert len(symmetries) == 3
+    assert all(
+        any(symmetry == expected for expected in expected_symmetries)
+        for symmetry in symmetries
+    )
+
+
 def test_get_trajectories_delegates_to_numerical_solver():
     numerical_solver = Mock()
     initial_value_problem_solver = Mock()

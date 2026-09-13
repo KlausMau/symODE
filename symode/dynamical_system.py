@@ -192,6 +192,24 @@ class DynamicalSystem:
 
         return dict(zip(self._variables, equation_vector))
 
+    def get_all_symmetries(self) -> list[sy.Matrix]:
+        """return all linear symmetry matrices of the dynamical system"""
+        ansatz = sy.Matrix(
+            self._dimension,
+            self._dimension,
+            lambda row, column: sy.Symbol(f"m_{row}_{column}"),
+        )
+        commutator = self.get_commutator_to_linear_transformation(ansatz)
+        coefficients = [
+            coefficient
+            for equation in commutator.values()
+            for coefficient in sy.Poly(equation, *self._variables).coeffs()
+        ]
+        groebner_basis = sy.groebner(coefficients, *list(ansatz), order="grevlex")
+        solutions = sy.solve(groebner_basis, list(ansatz), dict=True)
+
+        return [ansatz.subs(solution) for solution in solutions]
+
     def _calculate_jacobian(self) -> sy.Matrix:
         """compute Jacobian matrix of system"""
         jacobian = sy.ones(self._dimension)
