@@ -49,7 +49,6 @@ uv run all-checks
 - refactor `get_isostable_map_at_fixed_point`
   - review whether the new DynamicalSystem is really necessary
   - check for degenerate case of eigenvalues with multipl. > 1
-- add feature `find_symmetries`
 - add feature `get_inflection_set` (see Ref. ?)
 - add feature to check given ansatz for adjoint equation
 - add feature to compute Jacobian, Hessian and compiler only when needed
