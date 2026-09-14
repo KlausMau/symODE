@@ -76,6 +76,23 @@ class ComponentwiseExpression:
             if term != 0 and component != 0
         }
 
+    def eliminate_single_symbol_coefficients(self) -> dict[sy.Symbol, sy.Integer]:
+        """Set nonzero numerical multiples of symbols to zero."""
+        substitutions = {}
+        for coefficient in self._expression.values():
+            literal, symbol = coefficient.as_coeff_Mul()
+            if symbol.is_Symbol and literal.is_number and literal != 0:
+                substitutions[symbol] = sy.Integer(0)
+
+        self.subs(substitutions)
+        self.prune()
+
+        return substitutions
+
+    def get_components(self) -> dict[sy.Expr, sy.Expr]:
+        """Return the components as a monomial-to-coefficient mapping."""
+        return self._expression.copy()
+
     def sum_up(self) -> sy.Expr:
         """returns the full SymPy expression"""
         return sum(component * term for component, term in self._expression.items())
