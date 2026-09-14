@@ -1,9 +1,35 @@
 """This module contains utility functions."""
 
+import itertools
+
 import sympy as sy
 
 from symode.componentwise_expression import ComponentwiseExpression
 from symode.dynamical_system import DynamicalSystem
+
+
+def create_parametrized_polynomial(
+    degree: int, variables: list[sy.Symbol]
+) -> tuple[sy.Expr, list[sy.Symbol]]:
+    """Create a polynomial ansatz of the given total degree."""
+    exponent_tuples = [
+        exponents
+        for exponents in itertools.product(range(degree + 1), repeat=len(variables))
+        if sum(exponents) <= degree
+    ]
+    coefficient_symbols = {
+        exponents: sy.Symbol("a_" + "_".join(map(str, exponents)))
+        for exponents in exponent_tuples
+    }
+    polynomial = sum(
+        coefficient_symbols[exponents]
+        * sy.prod(
+            variable**exponent for variable, exponent in zip(variables, exponents)
+        )
+        for exponents in exponent_tuples
+    )
+
+    return polynomial, list(coefficient_symbols.values())
 
 
 def get_polynomial_coefficients(

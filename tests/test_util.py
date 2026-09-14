@@ -2,6 +2,7 @@ import sympy as sy
 
 from symode.dynamical_system import DynamicalSystem
 from symode.util import (
+    create_parametrized_polynomial,
     find_solution_of_equation_by_inserting_values,
     get_polynomial_coefficients,
     get_remainder_with_complex_ansatz,
@@ -9,6 +10,29 @@ from symode.util import (
     get_remainder_with_rational_ansatz,
     update_solution,
 )
+
+
+def test_create_parametrized_polynomial():
+    x, y = sy.symbols("x y")
+
+    polynomial, coefficients = create_parametrized_polynomial(2, [x, y])
+
+    assert polynomial == (
+        coefficients[0]
+        + coefficients[1] * y
+        + coefficients[2] * y**2
+        + coefficients[3] * x
+        + coefficients[4] * x * y
+        + coefficients[5] * x**2
+    )
+    assert coefficients == [
+        sy.Symbol("a_0_0"),
+        sy.Symbol("a_0_1"),
+        sy.Symbol("a_0_2"),
+        sy.Symbol("a_1_0"),
+        sy.Symbol("a_1_1"),
+        sy.Symbol("a_2_0"),
+    ]
 
 
 def test_get_polynomial_coefficients_from_equation():
