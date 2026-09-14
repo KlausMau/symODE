@@ -51,15 +51,14 @@ def test_componentwise_expression_prune_removes_zero_components():
     assert expression.sum_up() == 0
 
 
-def test_componentwise_expression_eliminates_single_symbol_coefficients():
-    x, a, b, c, d = sy.symbols("x a b c d")
-    expression = ComponentwiseExpression(-c * x**2 + (a + b) * x + 3 * c + d / 2)
+def test_componentwise_expression_drop_removes_component():
+    x, y = sy.symbols("x y")
+    expression = ComponentwiseExpression(x + y)
     expression.split(x)
 
-    substitutions = expression.eliminate_single_symbol_coefficients()
+    expression.drop(1)
 
-    assert substitutions == {c: 0}
-    assert expression.get_components() == {x: a + b, 1: d / 2}
+    assert expression.get_components() == {x: 1}
 
 
 def test_componentwise_expression_show_filters_by_operation_count(capsys):

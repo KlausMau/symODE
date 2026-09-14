@@ -76,18 +76,9 @@ class ComponentwiseExpression:
             if term != 0 and component != 0
         }
 
-    def eliminate_single_symbol_coefficients(self) -> dict[sy.Symbol, sy.Integer]:
-        """Set nonzero numerical multiples of symbols to zero."""
-        substitutions = {}
-        for coefficient in self._expression.values():
-            literal, symbol = coefficient.as_coeff_Mul()
-            if symbol.is_Symbol and literal.is_number and literal != 0:
-                substitutions[symbol] = sy.Integer(0)
-
-        self.subs(substitutions)
-        self.prune()
-
-        return substitutions
+    def drop(self, key: sy.Expr) -> None:
+        """Remove the component associated with ``key``."""
+        self._expression.pop(key, None)
 
     def get_components(self) -> dict[sy.Expr, sy.Expr]:
         """Return the components as a monomial-to-coefficient mapping."""
