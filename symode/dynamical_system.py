@@ -173,6 +173,12 @@ class DynamicalSystem:
             )
         return time_derivative
 
+    def get_operator_application(
+        self, observable: sy.Expr, lambda_: sy.Symbol
+    ) -> sy.Expr:
+        """Return the Koopman operator applied to an observable."""
+        return self.get_time_derivative_of_observable(observable) - lambda_ * observable
+
     def get_commutator_to_linear_transformation(
         self, linear_transformation: sy.Matrix
     ) -> dict[sy.Symbol, sy.Expr]:

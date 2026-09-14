@@ -52,6 +52,14 @@ def test_set_parameter_value(test_system):
     assert test_system._dynamical_equations == {variable: variable}
 
 
+def test_get_operator_application(test_system):
+    eigenvalue = sy.symbols("lambda")
+
+    application = test_system.get_operator_application(variable, eigenvalue)
+
+    assert sy.expand(application - (parameter - eigenvalue) * variable) == 0
+
+
 def test_get_symmetry_equations_uses_full_matrix_ansatz(numerics_adapter):
     x, y = sy.symbols("x y")
     system = DynamicalSystem(
