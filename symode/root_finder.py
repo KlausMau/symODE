@@ -6,12 +6,12 @@ from symode.solution import Solution
 
 def get_reduced_expression(
     expression: ComponentwiseExpression,
-) -> tuple[ComponentwiseExpression, dict[sy.Symbol, sy.Expr]]:
+) -> tuple[ComponentwiseExpression, Solution]:
     """Eliminate coefficients that occur as nonzero numeric multiples of symbols."""
     print(f"found {len(expression.get_components())} components")
     print("eliminating components with trivial coefficient ...")
 
-    eliminated_coefficients = {}
+    eliminated_coefficients = Solution()
     while True:
         new_eliminated_coefficients = {}
         keys_to_drop = []
@@ -31,7 +31,7 @@ def get_reduced_expression(
         expression.subs(new_eliminated_coefficients)
         eliminated_coefficients.update(new_eliminated_coefficients)
 
-    print(f"eliminated {len(eliminated_coefficients)} coefficients in total")
+    print(f"eliminated {len(eliminated_coefficients.get())} coefficients in total")
     return expression, eliminated_coefficients
 
 

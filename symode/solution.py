@@ -13,6 +13,7 @@ class Solution:
     def update(self, new_solution_part: dict[sy.Symbol, sy.Expr]) -> None:
         """Update the stored solution with new symbolic values."""
         for parameter, value in self.values.items():
-            self.values[parameter] = value.subs(new_solution_part).cancel()
+            value = sy.sympify(value)
+            self.values[parameter] = sy.cancel(value.subs(new_solution_part))
 
         self.values.update(new_solution_part)

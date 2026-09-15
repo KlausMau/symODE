@@ -11,13 +11,22 @@ def test_get_reduced_expression_eliminates_numeric_symbol_coefficients():
     x, y, a, b = sy.symbols("x y a b")
     expression = ComponentwiseExpression({sy.Integer(1): sy.Integer(3), x: a, y: 2 * b})
 
-    assert expression.get_components() == {1: 3, x: a, y: 2 * b}
+    reduced_expression, solution = get_reduced_expression(expression)
+
+    assert reduced_expression is expression
+    assert solution.get() == {a: 0, b: 0}
+    assert reduced_expression.get_components() == {sy.Integer(1): sy.Integer(3)}
+
+
+def test_get_reduced_expression_eliminates_numeric_symbol_coefficients_and_leaves_nonzero_components():
+    x, y, a, b = sy.symbols("x y a b")
+    expression = ComponentwiseExpression({x: a, y: 2 * b + 1})
 
     reduced_expression, solution = get_reduced_expression(expression)
 
     assert reduced_expression is expression
-    assert solution == {a: 0, b: 0}
-    assert reduced_expression.get_components() == {1: 3}
+    assert solution.get() == {a: 0}
+    assert reduced_expression.get_components() == {y: 2 * b + 1}
 
 
 def test_find_solution_of_equation_by_inserting_values(capsys):
