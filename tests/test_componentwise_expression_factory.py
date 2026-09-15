@@ -58,6 +58,41 @@ def test_create_componentwise_expression_with_monomial_bases_from_polynomial_exp
     assert coefficients.get_components() == {x: a, 1: 3}
 
 
+def test_componentwise_expression_from_expression_and_subs_preserve_expression():
+    x = sy.symbols("x")
+
+    expression = (
+        create_componentwise_expression_with_monomial_bases_from_polynomial_expression(
+            2 * x + 3, [x]
+        )
+    )
+
+    assert expression.get_components() == {x: 2, 1: 3}
+
+
+def test_componentwise_expression_prune_removes_zero_components():
+    x = sy.symbols("x")
+
+    expression = (
+        create_componentwise_expression_with_monomial_bases_from_polynomial_expression(
+            0, [x]
+        )
+    )
+
+    assert expression.get_components() == {}
+
+
+def test_componentwise_expression_drop_removes_component():
+    x, y = sy.symbols("x y")
+    expression = (
+        create_componentwise_expression_with_monomial_bases_from_polynomial_expression(
+            x + y, [x]
+        )
+    )
+
+    assert expression.get_components() == {x: 1, 1: y}
+
+
 def test_get_coefficients_of_trigonometric_expression():
     x = sy.symbols("x", real=True)
 

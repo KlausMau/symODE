@@ -9,6 +9,7 @@ class ComponentwiseExpression:
 
     def __init__(self, components: dict[sy.Expr, sy.Expr]) -> None:
         self._expression = components.copy()
+        self._prune()
 
     def _prune(self) -> None:
         """removes all components that have a coefficient of zero"""
