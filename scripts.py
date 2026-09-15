@@ -20,13 +20,30 @@ def test():
     subprocess.run(["pytest", "-v", "-ra"], check=True)
 
 
+def notebook_paths() -> list[Path]:
+    return sorted(Path("examples").glob("*.ipynb"))
+
+
+def notebooks_clear_outputs() -> None:
+    for notebook_path in notebook_paths():
+        subprocess.run(
+            [
+                "jupyter",
+                "nbconvert",
+                "--clear-output",
+                "--inplace",
+                str(notebook_path),
+            ],
+            check=True,
+        )
+
+
 def notebooks():
-    notebook_paths = sorted(Path("examples").glob("*.ipynb"))
     output_dir = Path(".notebook-output")
     shutil.rmtree(output_dir, ignore_errors=True)
     output_dir.mkdir()
 
-    for notebook_path in notebook_paths:
+    for notebook_path in notebook_paths():
         subprocess.run(
             [
                 "jupyter",
