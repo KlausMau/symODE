@@ -1,15 +1,11 @@
 import sympy as sy
 
 from symode.componentwise_expression import ComponentwiseExpression
-from symode.dynamical_system import DynamicalSystem
 from symode.util import (
     create_parametrized_polynomial,
     find_solution_of_equation_by_inserting_values,
     get_polynomial_coefficients,
     get_reduced_expression,
-    get_remainder_with_complex_ansatz,
-    get_remainder_with_exponential_ansatz,
-    get_remainder_with_rational_ansatz,
     update_solution,
 )
 
@@ -109,40 +105,3 @@ def test_find_solution_of_equation_returns_partial_solution_when_unsolved(capsys
 
     assert solution == {}
     assert "No solution found for x" in capsys.readouterr().out
-
-
-def make_linear_system():
-    x, a = sy.symbols("x a")
-    return DynamicalSystem({x: a * x}), x, a
-
-
-def test_get_remainder_with_rational_ansatz():
-    system, x, a = make_linear_system()
-    ld = sy.symbols("ld")
-
-    observable, remainder = get_remainder_with_rational_ansatz(system, x, 1, ld)
-
-    assert observable == x
-    assert sy.expand(remainder.sum_up() - (a - ld) * x) == 0
-
-
-def test_get_remainder_with_exponential_ansatz():
-    system, x, a = make_linear_system()
-    exponent, ld = sy.symbols("exponent ld")
-
-    observable, remainder = get_remainder_with_exponential_ansatz(
-        system, x, exponent, ld
-    )
-
-    assert observable == x * sy.exp(exponent)
-    assert sy.expand(remainder.sum_up() - (a - ld) * x) == 0
-
-
-def test_get_remainder_with_complex_ansatz():
-    system, x, a = make_linear_system()
-    ld, beta = sy.symbols("ld beta")
-
-    observable, remainder = get_remainder_with_complex_ansatz(system, x, 1, ld, beta)
-
-    assert observable == x * sy.exp(beta * sy.log(1))
-    assert sy.expand(remainder.sum_up() - (a - ld) * x) == 0
