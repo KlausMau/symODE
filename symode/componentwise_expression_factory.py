@@ -32,7 +32,6 @@ def create_componentwise_expression(
         components = new_components
 
     result = ComponentwiseExpression(components)
-    result.prune()
     return result
 
 

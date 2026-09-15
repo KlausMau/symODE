@@ -29,7 +29,6 @@ def get_reduced_expression(
         for key in keys_to_drop:
             expression.drop(key)
         expression.subs(new_eliminated_coefficients)
-        expression.prune()
         eliminated_coefficients.update(new_eliminated_coefficients)
 
     print(f"eliminated {len(eliminated_coefficients)} coefficients in total")

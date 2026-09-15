@@ -33,7 +33,6 @@ def test_componentwise_expression_from_expression_and_subs_preserve_expression()
 def test_componentwise_expression_prune_removes_zero_components():
     x = sy.symbols("x")
     expression = create_componentwise_expression(0, [x])
-    expression.prune()
 
     assert expression.sum_up() == 0
 
