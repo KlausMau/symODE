@@ -37,7 +37,7 @@ def create_componentwise_expression_with_monomial_bases_from_polynomial_expressi
 
 def create_parametrized_polynomial(
     degree: int, variables: list[sy.Symbol]
-) -> tuple[sy.Expr, list[sy.Symbol]]:
+) -> ComponentwiseExpression:
     """Create a polynomial ansatz of the given total degree."""
     exponent_tuples = [
         exponents
@@ -56,7 +56,11 @@ def create_parametrized_polynomial(
         for exponents in exponent_tuples
     )
 
-    return polynomial, list(coefficient_symbols.values())
+    return (
+        create_componentwise_expression_with_monomial_bases_from_polynomial_expression(
+            polynomial, variables
+        )
+    )
 
 
 def get_polynomial_coefficients(

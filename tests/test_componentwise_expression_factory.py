@@ -10,24 +10,16 @@ from symode.componentwise_expression_factory import (
 def test_create_parametrized_polynomial():
     x, y = sy.symbols("x y")
 
-    polynomial, coefficients = create_parametrized_polynomial(2, [x, y])
+    polynomial = create_parametrized_polynomial(2, [x, y])
 
-    assert polynomial == (
-        coefficients[0]
-        + coefficients[1] * y
-        + coefficients[2] * y**2
-        + coefficients[3] * x
-        + coefficients[4] * x * y
-        + coefficients[5] * x**2
-    )
-    assert coefficients == [
-        sy.Symbol("a_0_0"),
-        sy.Symbol("a_0_1"),
-        sy.Symbol("a_0_2"),
-        sy.Symbol("a_1_0"),
-        sy.Symbol("a_1_1"),
-        sy.Symbol("a_2_0"),
-    ]
+    assert polynomial.get_components() == {
+        sy.Integer(1): sy.Symbol("a_0_0"),
+        y: sy.Symbol("a_0_1"),
+        y**2: sy.Symbol("a_0_2"),
+        x: sy.Symbol("a_1_0"),
+        x * y: sy.Symbol("a_1_1"),
+        x**2: sy.Symbol("a_2_0"),
+    }
 
 
 def test_get_polynomial_coefficients_from_equation():
