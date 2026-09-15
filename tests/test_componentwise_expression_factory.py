@@ -1,6 +1,6 @@
 import sympy as sy
 
-from symode.util import (
+from symode.componentwise_expression_factory import (
     create_parametrized_polynomial,
     get_polynomial_coefficients,
 )
