@@ -27,7 +27,7 @@ def test_get_polynomial_coefficients_from_equation():
 
     coefficients = get_polynomial_coefficients(a * x**2 + b * y - 1, [x, y])
 
-    assert coefficients == {x**2: a, y: b, 1: -1}
+    assert coefficients.get_components() == {x**2: a, y: b, 1: -1}
 
 
 def test_get_polynomial_coefficients_from_equation_with_addition():
@@ -35,17 +35,15 @@ def test_get_polynomial_coefficients_from_equation_with_addition():
 
     coefficients = get_polynomial_coefficients(a * x**2 + b * x**2 - 1, [x, y])
 
-    assert coefficients == {x**2: a + b, 1: -1}
+    assert coefficients.get_components() == {x**2: a + b, 1: -1}
 
 
 def test_get_polynomial_coefficients_can_be_applied_to_multiple_equations():
     x, y, a = sy.symbols("x y a")
 
-    coefficients = [
-        get_polynomial_coefficients(equation, [x, y]) for equation in [a * x + 3, y**2]
-    ]
+    coefficients = get_polynomial_coefficients(a * x + 3, [x, y])
 
-    assert coefficients == [{x: a, 1: 3}, {y**2: 1}]
+    assert coefficients.get_components() == {x: a, 1: 3}
 
 
 def test_get_coefficients_of_trigonometric_expression():

@@ -65,7 +65,7 @@ def create_parametrized_polynomial(
 
 def get_polynomial_coefficients(
     equation: sy.Expr, variables: list[sy.Symbol]
-) -> dict[sy.Expr, sy.Expr]:
+) -> ComponentwiseExpression:
     """Return the coefficients grouped by their associated monomial."""
     coefficients = {}
     polynomial = sy.Poly(equation, *variables)
@@ -75,7 +75,7 @@ def get_polynomial_coefficients(
         )
         coefficients[monomial_expression] = coefficient
 
-    return coefficients
+    return ComponentwiseExpression(coefficients)
 
 
 def get_coefficients_of_trigonometric_expression(
