@@ -47,6 +47,38 @@ def get_polynomial_coefficients(
     return coefficients
 
 
+def get_reduced_expression(
+    expression: ComponentwiseExpression,
+) -> tuple[ComponentwiseExpression, dict[sy.Symbol, sy.Expr]]:
+    """Eliminate coefficients that occur as nonzero numeric multiples of symbols."""
+    print(f"found {len(expression.get_components())} components")
+    print("eliminating components with trivial coefficient ...")
+
+    eliminated_coefficients = {}
+    while True:
+        new_eliminated_coefficients = {}
+        keys_to_drop = []
+        for monomial, coefficient in expression.get_components().items():
+            literal, symbol = coefficient.as_coeff_Mul()
+            if symbol.is_Symbol and literal.is_number and literal != 0:
+                new_eliminated_coefficients[symbol] = 0
+                keys_to_drop.append(monomial)
+
+        if not new_eliminated_coefficients:
+            print("no new components to eliminate found. Resuming ...")
+            break
+
+        print(f"eliminating {len(keys_to_drop)} components ...")
+        for key in keys_to_drop:
+            expression.drop(key)
+        expression.subs(new_eliminated_coefficients)
+        expression.prune()
+        eliminated_coefficients.update(new_eliminated_coefficients)
+
+    print(f"eliminated {len(eliminated_coefficients)} coefficients in total")
+    return expression, eliminated_coefficients
+
+
 def update_solution(
     solution: dict[sy.Symbol, sy.Expr], new_solution_part: dict[sy.Symbol, sy.Expr]
 ) -> dict[sy.Symbol, sy.Expr]:
