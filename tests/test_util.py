@@ -3,7 +3,6 @@ import sympy as sy
 from symode.util import (
     create_parametrized_polynomial,
     get_polynomial_coefficients,
-    update_solution,
 )
 
 
@@ -54,13 +53,3 @@ def test_get_polynomial_coefficients_can_be_applied_to_multiple_equations():
     ]
 
     assert coefficients == [{x: a, 1: 3}, {y**2: 1}]
-
-
-def test_update_solution_substitutes_existing_values():
-    a, b = sy.symbols("a b")
-    solution = {a: b + 1}
-
-    updated_solution = update_solution(solution, {b: 2})
-
-    assert updated_solution == {a: 3, b: 2}
-    assert updated_solution is solution

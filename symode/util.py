@@ -42,15 +42,3 @@ def get_polynomial_coefficients(
         coefficients[monomial_expression] = coefficient
 
     return coefficients
-
-
-def update_solution(
-    solution: dict[sy.Symbol, sy.Expr], new_solution_part: dict[sy.Symbol, sy.Expr]
-) -> dict[sy.Symbol, sy.Expr]:
-    """returns a solution updated with new information"""
-    for parameter, value in solution.items():
-        solution[parameter] = value.subs(new_solution_part).cancel()
-
-    solution.update(new_solution_part)
-
-    return solution

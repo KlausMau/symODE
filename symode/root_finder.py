@@ -1,7 +1,7 @@
 import sympy as sy
 
 from symode.componentwise_expression import ComponentwiseExpression
-from symode.util import update_solution
+from symode.solution import Solution
 
 
 def get_reduced_expression(
@@ -43,14 +43,14 @@ def find_solution_of_equation_by_inserting_values(
     show_process: bool = False,
 ):
     """returns the solution of the equation by inserting the given values"""
-    solutions: dict[sy.Symbol, sy.Expr] = {}
+    solutions = Solution()
 
     for solvable_parameter, variable_value in value_parameter_list.items():
         sol = sy.solve(equation.subs({variable: variable_value}), solvable_parameter)
 
         if not sol:
             print(f"No solution found for {solvable_parameter}")
-            return solutions
+            return solutions.values
 
         solved_parameter_expression = sol[0]
 
@@ -60,7 +60,7 @@ def find_solution_of_equation_by_inserting_values(
         new_solution_part = {solvable_parameter: solved_parameter_expression.simplify()}
 
         # update the solutions
-        solutions = update_solution(solutions, new_solution_part)
+        solutions.update_solution(new_solution_part)
 
         # update equation
         equation = equation.subs(new_solution_part)
@@ -70,4 +70,4 @@ def find_solution_of_equation_by_inserting_values(
         print("remaining terms of equation:")
         print(equation.simplify())
 
-    return solutions
+    return solutions.values
