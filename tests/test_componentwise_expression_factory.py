@@ -2,6 +2,7 @@ import sympy as sy
 
 from symode.componentwise_expression_factory import (
     create_parametrized_polynomial,
+    get_coefficients_of_trigonometric_expression,
     get_polynomial_coefficients,
 )
 
@@ -53,3 +54,13 @@ def test_get_polynomial_coefficients_can_be_applied_to_multiple_equations():
     ]
 
     assert coefficients == [{x: a, 1: 3}, {y**2: 1}]
+
+
+def test_get_coefficients_of_trigonometric_expression():
+    x = sy.symbols("x", real=True)
+
+    coefficients = get_coefficients_of_trigonometric_expression(
+        sy.cos(x) + 2 * sy.sin(x) + 3, x, order_of_trigonometrics=1
+    )
+
+    assert coefficients == [sy.Rational(1, 2), -1, 3]

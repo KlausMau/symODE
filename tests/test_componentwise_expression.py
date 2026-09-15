@@ -3,7 +3,6 @@ import sympy as sy
 from symode.componentwise_expression import (
     ComponentwiseExpression,
     get_coefficients_of_polynomial_expression,
-    get_coefficients_of_trigonometric_expression,
 )
 
 
@@ -19,16 +18,6 @@ def test_get_coefficients_of_polynomial_expression():
         carry * x: 2,
         carry: 1,
     }
-
-
-def test_get_coefficients_of_trigonometric_expression():
-    x = sy.symbols("x", real=True)
-
-    coefficients = get_coefficients_of_trigonometric_expression(
-        sy.cos(x) + 2 * sy.sin(x) + 3, x, order_of_trigonometrics=1
-    )
-
-    assert coefficients == [sy.Rational(1, 2), -1, 3]
 
 
 def test_componentwise_expression_split_and_subs_preserve_expression():
