@@ -26,6 +26,10 @@ class ComponentwiseExpression:
         """Return the components as a monomial-to-coefficient mapping."""
         return self._expression.copy()
 
+    def get_free_symbols(self) -> set[sy.Symbol]:
+        """Return all unique free symbols in the component values."""
+        return set().union(*(value.free_symbols for value in self._expression.values()))
+
     def sum_up(self) -> sy.Expr:
         """returns the full SymPy expression"""
         return sum(component * term for component, term in self._expression.items())

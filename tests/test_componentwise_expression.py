@@ -58,6 +58,13 @@ def test_componentwise_expression_drop_removes_component():
     assert expression.get_components() == {x: 1}
 
 
+def test_componentwise_expression_get_free_symbols_from_values():
+    x, y, a, b = sy.symbols("x y a b")
+    expression = ComponentwiseExpression({x: a + b, y: a})
+
+    assert expression.get_free_symbols() == {a, b}
+
+
 def test_componentwise_expression_show_filters_by_operation_count(capsys):
     expression = ComponentwiseExpression({sy.Integer(1): sy.Integer(2)})
 
