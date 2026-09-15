@@ -1,5 +1,3 @@
-"""This module contains utility functions."""
-
 import itertools
 
 import sympy as sy
