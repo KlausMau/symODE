@@ -3,22 +3,7 @@ import sympy as sy
 from symode.componentwise_expression import ComponentwiseExpression
 from symode.componentwise_expression_factory import (
     create_componentwise_expression_with_monomial_bases_from_polynomial_expression,
-    get_coefficients_of_polynomial_expression,
 )
-
-
-def test_get_coefficients_of_polynomial_expression():
-    x, carry = sy.symbols("x carry")
-
-    coefficients = get_coefficients_of_polynomial_expression(
-        3 * x**2 + 2 * x + 1, x, carry
-    )
-
-    assert coefficients == {
-        carry * x**2: 3,
-        carry * x: 2,
-        carry: 1,
-    }
 
 
 def test_componentwise_expression_from_expression_and_subs_preserve_expression():

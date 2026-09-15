@@ -6,33 +6,19 @@ from sympy.simplify.fu import TR10
 from symode.componentwise_expression import ComponentwiseExpression
 
 
-def get_coefficients_of_polynomial_expression(
-    polynomial: sy.Expr, variable: sy.Expr, carry: sy.Expr
-) -> dict[sy.Expr, sy.Expr]:
-    """Return the coefficients of a polynomial."""
-    coefficients = sy.Poly(polynomial, variable).all_coeffs()
-    maximum_power = len(coefficients)
-    return {
-        carry * variable ** (maximum_power - power - 1): coefficient
-        for power, coefficient in enumerate(coefficients)
-    }
-
-
 def create_componentwise_expression_with_monomial_bases_from_polynomial_expression(
     expression: sy.Expr, variables: list[sy.Symbol]
 ) -> ComponentwiseExpression:
     """Create components by expanding ``expression`` in ``variables``."""
-    components = {sy.Integer(1): expression}
-    for variable in variables:
-        new_components = {}
-        for component, term in components.items():
-            new_components.update(
-                get_coefficients_of_polynomial_expression(term, variable, component)
-            )
-        components = new_components
+    coefficients = {}
+    polynomial = sy.Poly(expression, *variables)
+    for monomial, coefficient in polynomial.terms():
+        monomial_expression = sy.prod(
+            variable**power for variable, power in zip(variables, monomial)
+        )
+        coefficients[monomial_expression] = coefficient
 
-    result = ComponentwiseExpression(components)
-    return result
+    return ComponentwiseExpression(coefficients)
 
 
 def create_parametrized_polynomial(
@@ -61,21 +47,6 @@ def create_parametrized_polynomial(
             polynomial, variables
         )
     )
-
-
-def get_polynomial_coefficients(
-    equation: sy.Expr, variables: list[sy.Symbol]
-) -> ComponentwiseExpression:
-    """Return the coefficients grouped by their associated monomial."""
-    coefficients = {}
-    polynomial = sy.Poly(equation, *variables)
-    for monomial, coefficient in polynomial.terms():
-        monomial_expression = sy.prod(
-            variable**power for variable, power in zip(variables, monomial)
-        )
-        coefficients[monomial_expression] = coefficient
-
-    return ComponentwiseExpression(coefficients)
 
 
 def get_coefficients_of_trigonometric_expression(

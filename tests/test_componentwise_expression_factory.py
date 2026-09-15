@@ -1,9 +1,9 @@
 import sympy as sy
 
 from symode.componentwise_expression_factory import (
+    create_componentwise_expression_with_monomial_bases_from_polynomial_expression,
     create_parametrized_polynomial,
     get_coefficients_of_trigonometric_expression,
-    get_polynomial_coefficients,
 )
 
 
@@ -22,26 +22,38 @@ def test_create_parametrized_polynomial():
     }
 
 
-def test_get_polynomial_coefficients_from_equation():
+def test_create_componentwise_expression_with_monomial_bases_from_polynomial_expression():
     x, y, a, b = sy.symbols("x y a b")
 
-    coefficients = get_polynomial_coefficients(a * x**2 + b * y - 1, [x, y])
+    coefficients = (
+        create_componentwise_expression_with_monomial_bases_from_polynomial_expression(
+            a * x**2 + b * y - 1, [x, y]
+        )
+    )
 
     assert coefficients.get_components() == {x**2: a, y: b, 1: -1}
 
 
-def test_get_polynomial_coefficients_from_equation_with_addition():
+def test_create_componentwise_expression_with_monomial_bases_from_polynomial_expression_with_addition():
     x, y, a, b = sy.symbols("x y a b")
 
-    coefficients = get_polynomial_coefficients(a * x**2 + b * x**2 - 1, [x, y])
+    coefficients = (
+        create_componentwise_expression_with_monomial_bases_from_polynomial_expression(
+            a * x**2 + b * x**2 - 1, [x, y]
+        )
+    )
 
     assert coefficients.get_components() == {x**2: a + b, 1: -1}
 
 
-def test_get_polynomial_coefficients_can_be_applied_to_multiple_equations():
+def test_create_componentwise_expression_with_monomial_bases_from_polynomial_expression_can_be_applied_to_multiple_equations():
     x, y, a = sy.symbols("x y a")
 
-    coefficients = get_polynomial_coefficients(a * x + 3, [x, y])
+    coefficients = (
+        create_componentwise_expression_with_monomial_bases_from_polynomial_expression(
+            a * x + 3, [x, y]
+        )
+    )
 
     assert coefficients.get_components() == {x: a, 1: 3}
 
