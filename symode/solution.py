@@ -1,5 +1,3 @@
-"""Solution helpers."""
-
 import sympy as sy
 
 
@@ -9,7 +7,7 @@ class Solution:
     def __init__(self, values: dict[sy.Symbol, sy.Expr] | None = None) -> None:
         self.values = {} if values is None else values
 
-    def update_solution(
+    def update(
         self, new_solution_part: dict[sy.Symbol, sy.Expr]
     ) -> dict[sy.Symbol, sy.Expr]:
         """Update the stored solution with new symbolic values."""

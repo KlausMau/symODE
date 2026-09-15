@@ -60,7 +60,7 @@ def find_solution_of_equation_by_inserting_values(
         new_solution_part = {solvable_parameter: solved_parameter_expression.simplify()}
 
         # update the solutions
-        solutions.update_solution(new_solution_part)
+        solutions.update(new_solution_part)
 
         # update equation
         equation = equation.subs(new_solution_part)
