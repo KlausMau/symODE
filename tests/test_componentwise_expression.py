@@ -2,7 +2,7 @@ import sympy as sy
 
 from symode.componentwise_expression import ComponentwiseExpression
 from symode.componentwise_expression_factory import (
-    create_componentwise_expression,
+    create_componentwise_expression_with_monomial_bases_from_polynomial_expression,
     get_coefficients_of_polynomial_expression,
 )
 
@@ -23,7 +23,11 @@ def test_get_coefficients_of_polynomial_expression():
 
 def test_componentwise_expression_from_expression_and_subs_preserve_expression():
     x, y = sy.symbols("x y")
-    expression = create_componentwise_expression(2 * x + 3, [x])
+    expression = (
+        create_componentwise_expression_with_monomial_bases_from_polynomial_expression(
+            2 * x + 3, [x]
+        )
+    )
 
     expression.subs({x: y})
 
@@ -32,14 +36,22 @@ def test_componentwise_expression_from_expression_and_subs_preserve_expression()
 
 def test_componentwise_expression_prune_removes_zero_components():
     x = sy.symbols("x")
-    expression = create_componentwise_expression(0, [x])
+    expression = (
+        create_componentwise_expression_with_monomial_bases_from_polynomial_expression(
+            0, [x]
+        )
+    )
 
     assert expression.sum_up() == 0
 
 
 def test_componentwise_expression_drop_removes_component():
     x, y = sy.symbols("x y")
-    expression = create_componentwise_expression(x + y, [x])
+    expression = (
+        create_componentwise_expression_with_monomial_bases_from_polynomial_expression(
+            x + y, [x]
+        )
+    )
 
     expression.drop(1)
 

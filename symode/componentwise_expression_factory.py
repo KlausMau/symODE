@@ -18,7 +18,7 @@ def get_coefficients_of_polynomial_expression(
     }
 
 
-def create_componentwise_expression(
+def create_componentwise_expression_with_monomial_bases_from_polynomial_expression(
     expression: sy.Expr, variables: list[sy.Symbol]
 ) -> ComponentwiseExpression:
     """Create components by expanding ``expression`` in ``variables``."""
