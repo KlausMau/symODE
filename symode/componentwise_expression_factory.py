@@ -5,6 +5,38 @@ import itertools
 import sympy as sy
 from sympy.simplify.fu import TR10
 
+from symode.componentwise_expression import ComponentwiseExpression
+
+
+def get_coefficients_of_polynomial_expression(
+    polynomial: sy.Expr, variable: sy.Expr, carry: sy.Expr
+) -> dict[sy.Expr, sy.Expr]:
+    """Return the coefficients of a polynomial."""
+    coefficients = sy.Poly(polynomial, variable).all_coeffs()
+    maximum_power = len(coefficients)
+    return {
+        carry * variable ** (maximum_power - power - 1): coefficient
+        for power, coefficient in enumerate(coefficients)
+    }
+
+
+def create_componentwise_expression(
+    expression: sy.Expr, variables: list[sy.Symbol]
+) -> ComponentwiseExpression:
+    """Create components by expanding ``expression`` in ``variables``."""
+    components = {sy.Integer(1): expression}
+    for variable in variables:
+        new_components = {}
+        for component, term in components.items():
+            new_components.update(
+                get_coefficients_of_polynomial_expression(term, variable, component)
+            )
+        components = new_components
+
+    result = ComponentwiseExpression(components)
+    result.prune()
+    return result
+
 
 def create_parametrized_polynomial(
     degree: int, variables: list[sy.Symbol]

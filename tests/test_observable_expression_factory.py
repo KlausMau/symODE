@@ -20,7 +20,7 @@ def test_get_remainder_with_rational_ansatz():
     observable, remainder = get_remainder_with_rational_ansatz(system, x, 1, ld)
 
     assert observable == x
-    assert sy.expand(remainder.sum_up() - (a - ld) * x) == 0
+    assert sy.expand(remainder - (a - ld) * x) == 0
 
 
 def test_get_remainder_with_exponential_ansatz():
@@ -32,7 +32,7 @@ def test_get_remainder_with_exponential_ansatz():
     )
 
     assert observable == x * sy.exp(exponent)
-    assert sy.expand(remainder.sum_up() - (a - ld) * x) == 0
+    assert sy.expand(remainder - (a - ld) * x) == 0
 
 
 def test_get_remainder_with_complex_ansatz():
@@ -42,4 +42,4 @@ def test_get_remainder_with_complex_ansatz():
     observable, remainder = get_remainder_with_complex_ansatz(system, x, 1, ld, beta)
 
     assert observable == x * sy.exp(beta * sy.log(1))
-    assert sy.expand(remainder.sum_up() - (a - ld) * x) == 0
+    assert sy.expand(remainder - (a - ld) * x) == 0

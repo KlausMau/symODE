@@ -9,10 +9,7 @@ from symode.root_finder import (
 
 def test_get_reduced_expression_eliminates_numeric_symbol_coefficients():
     x, y, a, b = sy.symbols("x y a b")
-    expression = ComponentwiseExpression(a * x + 2 * b * y + 3)
-    expression.split(x)
-    expression.split(y)
-    expression.prune()
+    expression = ComponentwiseExpression({sy.Integer(1): sy.Integer(3), x: a, y: 2 * b})
 
     assert expression.get_components() == {1: 3, x: a, y: 2 * b}
 
