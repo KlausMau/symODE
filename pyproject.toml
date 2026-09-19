@@ -1,6 +1,6 @@
 [project]
 name = "symode"
-version = "0.2.0"
+version = "0.2.1"
 description = "symODE is a tool for symbolic and numerical analysis of ordinary differential equations."
 authors = [
     {name = "Erik T. K. Mau"}
