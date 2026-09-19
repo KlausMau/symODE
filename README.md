@@ -39,8 +39,6 @@ uv run all-checks
 
 ## Backlog
 
-- CD with GitHub actions
-  - deploy to conda and pypi package
 - allow ODEs to be dependent on time explicitly
 - refactor `get_limit_cycle`
 - refactor `get_event_based_evolution`
