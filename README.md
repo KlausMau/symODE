@@ -39,7 +39,6 @@ uv run all-checks
 
 ## Backlog
 
-- allow ODEs to be dependent on time explicitly
 - refactor `get_limit_cycle`
 - refactor `get_event_based_evolution`
 - refactor `get_isochrones_isostables`
