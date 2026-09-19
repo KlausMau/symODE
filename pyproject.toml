@@ -7,7 +7,7 @@ authors = [
 ]
 license = {text = "MIT"}
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 dependencies = [
     "sympy>=1.14.0,<2.0.0",
     "numpy>=2.0.0,<3.0.0",
