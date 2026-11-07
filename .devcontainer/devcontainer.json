@@ -1,0 +1,14 @@
+{
+  "name": "uv-project",
+  "image": "mcr.microsoft.com/devcontainers/python:3.12",
+  "runArgs": ["--userns=keep-id", "--security-opt=label=disable"],
+  "containerUser": "vscode",
+  "remoteUser": "vscode",
+  "containerEnv": { "HOME": "/home/vscode" },
+  "postCreateCommand": "python -m pip install --user uv && python -m uv sync",
+  "customizations": {
+    "jetbrains": {
+      "backend": "PyCharm"
+    }
+  }
+}
